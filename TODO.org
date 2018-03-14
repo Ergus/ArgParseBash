@@ -1,0 +1,16 @@
+#-*- mode: org -*-
+#+STARTUP: showall
+
+* List of pending implementations
+
+** TODO Add conditional options
+
+** TODO Add a parameter consistency check
+
+** TODO Add mandatory/optional parameters
+
+** TODO Add help command
+
+
+
+
