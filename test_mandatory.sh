@@ -5,8 +5,7 @@ cat <<EOF
 ==================================================================
 
  This is a simple script to test the argparse bash script.
- You can call the script with the options specified using the long
- and short names.
+ This one is specific for optional options
  This is a WIP and of course can be improved, if you use/improve it
  or you find any error/issue, please, contact me in order to improve,
  correct or add you as a collaborator in this project.

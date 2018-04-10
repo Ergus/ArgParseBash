@@ -59,10 +59,11 @@ function add_argument() {
 		# Arguments not mandatory by default
 		MANDATORY[${arg[a]}]=false
 
-		# if ![-b] then it expects an argument
+		# if [-b]=>bool then it does not expect an argument
 		if [[ -n ${arg[b]// } ]]; then
 			ARG_TYPE[${arg[a]}]=bool
-			[[ -n ${arg[d]// } ]] && def_val=${arg[d]} || def_val=false
+			# any argument given only see true or false
+			[[ -n ${arg[d]// } ]] && def_val=true || def_val=false
 		else
 			opt_chars+=":"
 			# if default value provided use it else it is mandatory
@@ -70,7 +71,7 @@ function add_argument() {
 		fi
 
 		# assign always a value (false if not)
-		ARGS[${arg[a]}]=${def_val}                  # add the vale in the array!!
+		ARGS[${arg[a]}]=${def_val}             # add the vale in the array!!
 
 		# the long option is optional
 		if [[ -n ${arg[l]} ]]; then
@@ -151,8 +152,15 @@ function parse_args() {
 
 function printargs() {
 	# Prints the arguments (short and long) with its values and doc-string 
-
 	for i in "${!ARGS[@]}"; do
-		echo "arg: $i long: ${MAP_LONG_ARGS[$i]} help: ${HELP_ARGS[$i]} value: ${ARGS[$i]}"
+		local bo=" " bc=" "
+		local long="--" def=""
+
+		[[ "${MANDATORY[$i]}" = false ]] && bo="[" && bc="]"
+		local short=${bo}-${i}${bc}
+
+		[[ -n ${MAP_LONG_ARGS[$i]} ]] && long="|${bo}--${MAP_LONG_ARGS[$i]}${bc}"
+
+		echo -e "arg: ${short}${long}: (${ARG_TYPE[$i]}:${ARGS[$i]}) \t${HELP_ARGS[$i]} "
 	done
 }

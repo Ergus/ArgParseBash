@@ -26,9 +26,10 @@ EOF
 source argparse.sh
 
 add_argument -a h -l help -h "Funcion help" -b
+add_argument -a t -l trueo -h "Funcion help" -b -d true
 add_argument -a p -l print -h "Funcion print" -d 0
 add_argument -a l -l loops -h "Number of loops" -d 10
-add_argument -a o -l other 
+add_argument -a o -l other
 
 
 echo -e "\n Before"
