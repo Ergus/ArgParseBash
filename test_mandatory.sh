@@ -21,23 +21,18 @@ cat <<EOF
 
 EOF
 
-# This can be called for example: ./test_parser.sh -h -l 3 -o -p 1 --help
+# This can be called for example: ./test_mandatory.sh -m ttt -d bbb -b
 
 source argparse.sh
 
-add_argument -a h -l help -h "Funcion help" -b
-add_argument -a p -l print -h "Funcion print" -d 0
-add_argument -a l -l loops -h "Number of loops" -d 10
-add_argument -a o -l other 
+add_argument -a b -l bool -h "Boolean default false" -b
+add_argument -a m -l mandatory -h "Mandatory argument"
+add_argument -a d -l default -h "Default argument" -d "defvalue"
 
-
-echo -e "\n Before"
+echo -e "\n Before (default)"
 printargs
 
 parse_args "$@"
-echo -e "\n After"
 
+echo -e "\n After (parsed)"
 printargs
-
-echo "Number of loops: "${ARGS[l]}
-echo "Print value: "${LONG_ARGS[print]}
