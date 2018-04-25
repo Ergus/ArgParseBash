@@ -33,7 +33,7 @@ There are 4 functions:
 
 + validate: Validates the arguments.
 
-	Up to now it only check the mandatory options.
+	Up to now it only checks the mandatory options.
 	This function is always called by default at the end of parse_args
 
 Accessing parameters
@@ -44,9 +44,9 @@ LONG_ARGS[long].
 
 The help can be accessed as HELP_ARGS[short].
 
-There are names restrictions for the script variables as all the variables in bash are public by default. Also for simplicity, please read the script.
+There are names restrictions for the script variables as all the variables in bash are public by default. Also, for simplicity, please read the script.
 
-These names are forbidden because we use them internally and they are public variables.
+These names are forbidden because we use them internally, and they are public variables.
 
 + ARGS: asociative array with the values, index *short* name
 
