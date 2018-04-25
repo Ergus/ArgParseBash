@@ -22,13 +22,13 @@
 # but there is not time now.
 nargs=0                       # number of total arguments (unused now)
 opt_chars=""          		  # chain to parse
-declare -g -A ARGS       	  # associative array for argument/value
-declare -g -A LONG_ARGS  	  # associative array for long_argument/value
-declare -g -A MAP_LONG_ARGS   # associative array argument/long_argument
-declare -g -A MAP_ARGS_LONG   # associative array long_argument/argument
-declare -g -A HELP_ARGS       # associative array for argument/help_string
-declare -g -A MANDATORY       # list for mandatory arguments
-declare -g -A ARG_TYPE        # list for mandatory arguments
+declare -A ARGS       	  # associative array for argument/value
+declare -A LONG_ARGS  	  # associative array for long_argument/value
+declare -A MAP_LONG_ARGS   # associative array argument/long_argument
+declare -A MAP_ARGS_LONG   # associative array long_argument/argument
+declare -A HELP_ARGS       # associative array for argument/help_string
+declare -A MANDATORY       # list for mandatory arguments
+declare -A ARG_TYPE        # list for mandatory arguments
 
 function add_argument() {
 	# This function adds command line parameters
