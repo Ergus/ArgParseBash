@@ -15,125 +15,149 @@
 # email: kratsbinovish@gmail.com
 # date: 06/03/2018
 
-# TODO: argument type validation
-# TODO: default parameters
-
 # Declare global variables, I would prefer some level of encapsulation here,
 # but there is not time now.
-nargs=0                       # number of total arguments (unused now)
-opt_chars=""          		  # chain to parse
-declare -A ARGS       	  # associative array for argument/value
-declare -A LONG_ARGS  	  # associative array for long_argument/value
+set -e
+nargs=0						  # number of total arguments (unused now)
+opt_chars=""				  # chain to parse
+declare -A ARGS			  # associative array for argument/value
+declare -A LONG_ARGS	  # associative array for long_argument/value
 declare -A MAP_LONG_ARGS   # associative array argument/long_argument
 declare -A MAP_ARGS_LONG   # associative array long_argument/argument
-declare -A HELP_ARGS       # associative array for argument/help_string
-declare -A MANDATORY       # list for mandatory arguments
-declare -A ARG_TYPE        # list for mandatory arguments
+declare -A HELP_ARGS	   # associative array for argument/help_string
+declare -A MANDATORY	   # list for mandatory arguments
+declare -A ARG_TYPE		   # list for mandatory arguments
+
+VALID_TYPES="string int float bool path file"
+
+# Arguments type tests
+# Receives the argument and the value
+function check () {
+	if [[ -z $2 ]] || [[ -z ${ARG_TYPE[$1]} ]]; then   # Check
+		printf "Error using %s function" $0 >&2
+		exit 1
+	fi
+	local type=${ARG_TYPE[$1]}
+	local value=$2
+	case $type in
+		string) echo true ;;
+		int) [[ $value =~ ^-?[0-9]+$ ]] && echo true || echo false ;;
+		float) [[ $value =~ ^-?[0-9]+.?[0-9]+?$ ]] && echo true || echo false ;;
+		bool) [[ "true false" =~ $value ]] && echo true || echo false ;;
+		path) [[ -d $value ]] && echo true || echo false ;;
+		file) [[ -f $value ]] && echo true || echo false ;;
+		*) echo false ;;
+	esac
+}
 
 function add_argument() {
 	# This function adds command line parameters
 
-	if [ -z $1 ]; then   # Check
-		printf "Usage %s -a argname -l longname -h helstring -d defaultvalue\n" $0
-		return
+	if [[ -z $1 ]]; then   # Check
+		printf "Usage %s -a argname -l longname -h helstring -d defaultvalue\n" $0 >&2
+		exit 1
 	fi
 
 	local OPTIND # to save the index locally
 	declare -A arg=([h]="No documented option")
-	while getopts "a:l:h:d:b" o; do # Read the function arguments -a mandatory
+	while getopts "a:l:h:d:t:" o; do # Read the function arguments -a mandatory
 		case $o in
-			a) arg[a]=${OPTARG} ;;   				# argument
-			l) arg[l]=${OPTARG} ;;   				# long argument
-			h) arg[h]=${OPTARG} ;;   				# help
-			d) arg[d]=${OPTARG}	;;   				# default value
-			b) arg[b]=true	;;   				    # boolean
+			a) arg[a]=${OPTARG} ;;			# argument
+			l) arg[l]=${OPTARG} ;;			# long argument
+			h) arg[h]=${OPTARG} ;;			# help
+			d) arg[d]=${OPTARG}	;;			# default value
+			t) arg[t]=${OPTARG}	;;			# boolean
 			*) echo "Unknown option "$o >&2
 		esac
 	done
 
 	if [ -n ${arg[a]} ]; then # a short option is mandatory (-a before), check it
-		opt_chars+=${arg[a]}                        # append option to the format
-		local def_val=empty                         # default is always false
-		# Argument type, default string for all
-		ARG_TYPE[${arg[a]}]=string
-		# Arguments not mandatory by default
-		MANDATORY[${arg[a]}]=false
+		opt_chars+=${arg[a]}				# append option to the format
+		local def_val=empty					# default is always false
+		ARG_TYPE[${arg[a]}]=string			# Argument type, default string for all=
+		MANDATORY[${arg[a]}]=true			# Arguments mandatory by default
 
-		# if [-b]=>bool then it does not expect an argument
-		if [[ -n ${arg[b]// } ]]; then
-			ARG_TYPE[${arg[a]}]=bool
-			# any argument given only see true or false
-			[[ -n ${arg[d]// } ]] && def_val=true || def_val=false
-		else
-			opt_chars+=":"
-			# if default value provided use it else it is mandatory
-			[[ -n ${arg[d]// } ]] && def_val=${arg[d]} || MANDATORY[${arg[a]}]=true
+		# Set type (default string)
+		if [[ -n ${arg[t]} ]]; then
+			if [[ ${VALID_TYPES} =~ ${arg[t]} ]]; then
+				ARG_TYPE[${arg[a]}]=${arg[t]}
+			else
+				echo "${arg[t]} is not a valid type" >&2
+				exit 1
+			fi
 		fi
 
-		# assign always a value (false if not)
-		ARGS[${arg[a]}]=${def_val}             # add the vale in the array!!
+		# Default values (default empty, false for bool)
+		if [[ ${ARG_TYPE[${arg[a]}]} = "bool" ]]; then
+			# bool values never mandatory, only true or false
+			[[ -n ${arg[d]} ]] && def_val=true || def_val=false
+			MANDATORY[${arg[a]}]=false
+		else
+			# if default value provided use it else it is mandatory
+			opt_chars+=":"
+			if [[ -n ${arg[d]} ]]; then
+				local valid=$(check ${arg[a]} ${arg[d]})
+				if [[ ${valid} = "true" ]]; then
+					def_val=${arg[d]}
+					MANDATORY[${arg[a]}]=false
+				else
+					echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\" " >&2
+					echo "This is an error in the script"
+					exit 1
+				fi
+			fi
+		fi
 
-		# the long option is optional
+		# assign always a value (empty if not)
+		ARGS[${arg[a]}]=${def_val}			   # add the vale in the array!!
+
+		# the long option
 		if [[ -n ${arg[l]} ]]; then
 			LONG_ARGS[${arg[l]}]=${def_val}
-			MAP_LONG_ARGS[${arg[a]}]=${arg[l]}      # for forward search fast
-			MAP_ARGS_LONG[${arg[l]}]=${arg[a]}      # for backward search fast
+			MAP_LONG_ARGS[${arg[a]}]=${arg[l]}		# for forward search fast
+			MAP_ARGS_LONG[${arg[l]}]=${arg[a]}		# for backward search fast
 		fi
 
 		#always set a Help, at least say is empty
 		HELP_ARGS[${arg[a]}]=${arg[h]}
 	else
 		echo "Error adding CL argument, no short name given" >&2
+		exit 1
 	fi
 
 	((nargs+=1))  # Counter (unused now)
-}
-
-function validate() {
-	local success=true
-	for i in "${!MANDATORY[@]}"; do
-		# check mandatory arguments with a value
-		if [[ ${ARGS[$i]} = empty ]] && [[ ${MANDATORY[$i]} = true ]]; then
-			echo "Argument: -$i|--${MAP_LONG_ARGS[$i]}: ${HELP_ARGS[$i]}. is mandatory!!"
-			success=false
-		fi
-	done
-	if [ "${success}" = false ] ; then
-		echo "Mandatory command line arguments missing" >&2
-		exit 1
-	fi
 }
 
 function parse_args() {
 	# This function parses the command line arguments
 	# for example should be called as: parse_args "$@"
 
-	local largs=${MAP_LONG_ARGS[@]}      # create a string with all the long args
-	local OPTIND                         # local index
+	local largs=${MAP_LONG_ARGS[@]}		 # create a string with all the long args
+	local OPTIND						 # local index
 	local short="" long=""
 
 	while getopts ${opt_chars}"-:" o; do # parse -short and --long options
 
-		[[ $o = "?" ]] && continue       # assert is a valid option
+		[[ $o = "?" ]] && continue		 # assert is a valid option
 		value=empty
 
-		if [[ $o = "-" ]]; then     # long options filtered by hand
+		if [[ $o = "-" ]]; then		# long options filtered by hand
 			opt=${OPTARG}
 			[[ ${opt} =~ "=" ]] && value=${opt#*=} && opt=${opt%=$value}  # split
-			[[ -z $value ]] && value=empty        # empty value means empty
+			[[ -z $value ]] && value=empty		  # empty value means empty
 
-			if [[ ${largs} =~ ${opt} ]]; then     # check if long option exists
-				short=${MAP_ARGS_LONG[$opt]}      # corresponding short opt
+			if [[ ${largs} =~ ${opt} ]]; then	  # check if long option exists
+				short=${MAP_ARGS_LONG[$opt]}	  # corresponding short opt
 				long=${opt}
-			else                    # if no long option exist with this name
+			else					# if no long option exist with this name
 				echo "Unknown option: "$opt >&2
 				continue
 			fi
-		else                                   # short options (already filtered)
-			short=$o                           # set them
+		else								   # short options (already filtered)
+			short=$o						   # set them
 			[[ ${opt_chars} =~ ${short}":" ]] && value=$OPTARG
 
-			long=${MAP_LONG_ARGS[$o]}          # search if exists corresponding long
+			long=${MAP_LONG_ARGS[$o]}		   # search if exists corresponding long
 		fi
 
 		# type validation here if needed
@@ -141,13 +165,32 @@ function parse_args() {
 			[[ ${ARGS[$short]} = true ]] && value=false || value=true
 		fi
 
-		# assign
-		ARGS[$short]=${value}                 # if we arrive here always set a value
-		[[ -n ${long} ]] && LONG_ARGS[$long]=${value}    # set long IF it exists
+		local valid=$(check ${short} ${value})
+		if [[ ${valid} = "true" ]]; then
+			# assign
+			ARGS[$short]="${value}"					# if we arrive here always set a value
+			[[ -n ${long} ]] && LONG_ARGS[$long]=${value}	 # set long IF it exists
+		else
+			echo "Invalid value \"${value}\" for option \"-${short}\": it is not a valid \"${ARG_TYPE[${short}]}\" " >&2
+			echo "Kept value: ${ARGS[${short}]}" >&2
+		fi
 
 	done
 	shift $((OPTIND-1))
-	validate
+
+	# Check mandatory arguments
+	local invalid=0
+	for i in "${!MANDATORY[@]}"; do
+		if [[ ${ARGS[$i]} = empty ]] && [[ ${MANDATORY[$i]} = true ]]; then
+			echo "Argument: -$i|--${MAP_LONG_ARGS[$i]}: ${HELP_ARGS[$i]}. is mandatory!!" >&2
+			((invalid+=1))
+		fi
+	done
+
+	if (( invalid > 0 )) ; then
+		echo "${invalid} mandatory command line arguments missing" >&2
+		exit 1
+	fi
 }
 
 function printargs() {
@@ -161,6 +204,6 @@ function printargs() {
 
 		[[ -n ${MAP_LONG_ARGS[$i]} ]] && long="|${bo}--${MAP_LONG_ARGS[$i]}${bc}"
 
-		echo -e "arg: ${short}${long}: (${ARG_TYPE[$i]}:${ARGS[$i]}) \t${HELP_ARGS[$i]} "
+		echo -e "arg: ${short}${long}: (${ARG_TYPE[$i]}:${ARGS[$i]}) ${HELP_ARGS[$i]} "
 	done
 }

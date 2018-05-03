@@ -20,21 +20,28 @@ There are 4 functions:
 
 	- -h docstring [optional default: "Not documented"]
 
-	- -b boolean [sets a boolean variable default false if used without -d]
+	- -t Type of the parameters (string int float bool path file) [optional default: string]
 
 + parse_args: to parse the command line arguments or any list
 
 	This one can be called passsing any list of arguments to process
 	for example "$@"
 
+	At the end of this function it checks that the mandatory arguments have a non-empty value.
+
 + printargs: prints the arguments defined in the script and the values.
 
 	Usefull for debug purposes and to print the help
 
-+ validate: Validates the arguments.
++ check: checks the values to match the parameter types. This is an internal function.
 
-	Up to now it only checks the mandatory options.
-	This function is always called by default at the end of parse_args
+	The valid types are: (string int float bool path file)
+
+	In case of path and file it checks that the path or the file exists in the filesystem.
+
+	In case of float it accepts formats like 3.14 or 3.
+
+	String is not validated because all the bash strings are valid.
 
 Accessing parameters
 --------------------
@@ -66,8 +73,7 @@ This is a WIP and of course can be improved, if you use/improve it
 or you find any error/issue, please, contact me in order to improve,
 correct or add you as a collaborator in this project.
 
-
-The bool variables added with -b do not require a parameter, in fact it is ignored if provided and the variable is only switched between true and false.
+The bool variables do not require a parameter, in fact it is ignored if provided and the variable is only switched between true and false.
 
 This is under GPLv3 license
 

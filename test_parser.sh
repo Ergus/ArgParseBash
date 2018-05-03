@@ -23,10 +23,12 @@ EOF
 
 # This can be called for example: ./test_parser.sh -h -l 3 -o -p 1 --help
 
+echo "Command: $0 $@"
+
 source argparse.sh
 
-add_argument -a h -l help -h "Funcion help" -b
-add_argument -a t -l trueo -h "Funcion help" -b -d true
+add_argument -a h -l help -h "Funcion help" -t bool
+add_argument -a t -l trueo -h "Funcion help" -t bool -d true
 add_argument -a p -l print -h "Funcion print" -d 0
 add_argument -a l -l loops -h "Number of loops" -d 10
 add_argument -a o -l other

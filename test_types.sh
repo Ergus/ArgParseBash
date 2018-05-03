@@ -5,7 +5,7 @@ cat <<EOF
 ==================================================================
 
  This is a simple script to test the argparse bash script.
- This one is specific for optional options
+ This one is specific for types checking
  This is a WIP and of course can be improved, if you use/improve it
  or you find any error/issue, please, contact me in order to improve,
  correct or add you as a collaborator in this project.
@@ -14,26 +14,30 @@ cat <<EOF
 
  author: Jimmy Aguilar Mena
  email: kratsbinovish@gmail.com
- date: 06/03/2018
+ date: 03/05/2018
 
 ==================================================================
 
 EOF
 
-# This can be called for example: ./test_mandatory.sh -m ttt -d bbb -b
-
 echo "Command: $0 $@"
 
 source argparse.sh
 
-add_argument -a b -l bool -h "Boolean default false" -t bool
-add_argument -a m -l mandatory -h "Mandatory argument"
-add_argument -a d -l default -h "Default argument" -d "defvalue"
+add_argument -a s -l string -h "String parameter" -t string -d "mystring"
+add_argument -a i -l int -h "int parameter" -t int -d 100
+add_argument -a f -l float -h "float parameter" -t float -d 3.14
 
-echo -e "\n Before (default)"
+add_argument -a t -l true -h "True option" -t bool -d true
+add_argument -a n -l notrue -h "Notrue option" -t bool
+
+add_argument -a p -l path -h "Path option" -t path -d $HOME
+add_argument -a a -l archive -h "Archive option" -t file -d /etc/fstab
+
+echo -e "\n Before"
 printargs
 
 parse_args "$@"
+echo -e "\n After"
 
-echo -e "\n After (parsed)"
 printargs
