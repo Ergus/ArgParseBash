@@ -34,6 +34,8 @@ add_argument -a n -l notrue -h "Notrue option" -t bool
 add_argument -a p -l path -h "Path option" -t path -d $HOME
 add_argument -a a -l archive -h "Archive option" -t file -d /etc/fstab
 
+add_argument -a l -l list -h "List option" -t enum -e "option1 option2" -d option1
+
 echo -e "\n Before"
 printargs
 

@@ -20,7 +20,10 @@ There are 4 functions:
 
 	- -h docstring [optional default: "Not documented"]
 
-	- -t Type of the parameters (string int float bool path file) [optional default: string]
+	- -t Type of the parameters (string int float bool path file enum) [optional default: string]
+	
+	- -e The list of valid values when using enum. The argument is used and
+      required ONLY then -t enum. It expects a simple list like: **"opt1 opt2 ..."**
 
 + parse_args: to parse the command line arguments or any list
 
@@ -40,6 +43,8 @@ There are 4 functions:
 	In case of path and file it checks that the path or the file exists in the filesystem.
 
 	In case of float it accepts formats like 3.14 or 3.
+	
+	In case of Enum if checks that the enum is one of the valid options.
 
 	String is not validated because all the bash strings are valid.
 

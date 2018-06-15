@@ -18,17 +18,18 @@
 # Declare global variables, I would prefer some level of encapsulation here,
 # but there is not time now.
 set -e
-nargs=0						  # number of total arguments (unused now)
-opt_chars=""				  # chain to parse
-declare -A ARGS			  # associative array for argument/value
-declare -A LONG_ARGS	  # associative array for long_argument/value
+nargs=0					   # number of total arguments (unused now)
+opt_chars=""			   # chain to parse
+declare -A ARGS			   # associative array for argument/value
+declare -A LONG_ARGS	   # associative array for long_argument/value
 declare -A MAP_LONG_ARGS   # associative array argument/long_argument
 declare -A MAP_ARGS_LONG   # associative array long_argument/argument
 declare -A HELP_ARGS	   # associative array for argument/help_string
 declare -A MANDATORY	   # list for mandatory arguments
 declare -A ARG_TYPE		   # list for mandatory arguments
+declare -A ENUMS           # list of valid parameters for lists
 
-VALID_TYPES="string int float bool path file"
+VALID_TYPES="string int float bool path file enum"
 
 # Arguments type tests
 # Receives the argument and the value
@@ -46,6 +47,7 @@ function check () {
 		bool) [[ "true false" =~ $value ]] && echo true || echo false ;;
 		path) [[ -d $value ]] && echo true || echo false ;;
 		file) [[ -f $value ]] && echo true || echo false ;;
+		enum) [[ "${ENUMS[$1]}" =~ $value ]] && echo true || echo false ;;
 		*) echo false ;;
 	esac
 }
@@ -60,18 +62,19 @@ function add_argument() {
 
 	local OPTIND # to save the index locally
 	declare -A arg=([h]="No documented option")
-	while getopts "a:l:h:d:t:" o; do # Read the function arguments -a mandatory
+	while getopts "a:l:h:d:t:e:" o; do # Read the function arguments -a mandatory
 		case $o in
 			a) arg[a]=${OPTARG} ;;			# argument
 			l) arg[l]=${OPTARG} ;;			# long argument
 			h) arg[h]=${OPTARG} ;;			# help
 			d) arg[d]=${OPTARG}	;;			# default value
-			t) arg[t]=${OPTARG}	;;			# boolean
+			t) arg[t]=${OPTARG}	;;			# expected type
+			e) arg[e]=${OPTARG}	;;          # enum (if -t enum)
 			*) echo "Unknown option "$o >&2
 		esac
 	done
 
-	if [ -n ${arg[a]} ]; then # a short option is mandatory (-a before), check it
+	if [ -n ${arg[a]} ]; then				# a short option is mandatory (-a before), check it
 		opt_chars+=${arg[a]}				# append option to the format
 		local def_val=empty					# default is always false
 		ARG_TYPE[${arg[a]}]=string			# Argument type, default string for all=
@@ -93,6 +96,15 @@ function add_argument() {
 			[[ -n ${arg[d]} ]] && def_val=true || def_val=false
 			MANDATORY[${arg[a]}]=false
 		else
+			# Sets ENUMS[short] before testing. Needed!!
+			if [[ ${ARG_TYPE[${arg[a]}]} = "enum" ]]; then
+				if [[ -n ${arg[e]} ]] ; then
+					ENUMS[${arg[a]}]=${arg[e]}
+				else
+					echo "Enum requires -e option" >&2
+					exit 1
+				fi
+			fi
 			# if default value provided use it else it is mandatory
 			opt_chars+=":"
 			if [[ -n ${arg[d]} ]]; then
@@ -171,8 +183,13 @@ function parse_args() {
 			ARGS[$short]="${value}"					# if we arrive here always set a value
 			[[ -n ${long} ]] && LONG_ARGS[$long]=${value}	 # set long IF it exists
 		else
-			echo "Invalid value \"${value}\" for option \"-${short}\": it is not a valid \"${ARG_TYPE[${short}]}\" " >&2
-			echo "Kept value: ${ARGS[${short}]}" >&2
+			echo -n "Invalid value \"${value}\" for option \"-${short}\": "
+			if [[ ${ARG_TYPE[${short}]} = "enum" ]]; then
+				echo -e "valid values are:\n\t${ENUMS[${short}]}"
+			else
+				echo "it is not a valid \"${ARG_TYPE[${short}]}\" " >&2
+			fi
+			echo -e "\tKept value: ${ARGS[${short}]}" >&2
 		fi
 
 	done
