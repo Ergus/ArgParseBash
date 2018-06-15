@@ -29,7 +29,7 @@ declare -A MANDATORY	   # list for mandatory arguments
 declare -A ARG_TYPE		   # list for mandatory arguments
 declare -A ENUMS           # list of valid parameters for lists
 
-VALID_TYPES="string int float bool path file enum"
+VALID_TYPES="string int float bool path file enum timer"
 
 # Arguments type tests
 # Receives the argument and the value
@@ -48,6 +48,7 @@ function check () {
 		path) [[ -d $value ]] && echo true || echo false ;;
 		file) [[ -f $value ]] && echo true || echo false ;;
 		enum) [[ "${ENUMS[$1]}" =~ $value ]] && echo true || echo false ;;
+		timer) [[ $value =~ ^[0-9]+:?[0-5][0-9]:[0-5][0-9]$ ]] && echo true || echo false ;;
 		*) echo false ;;
 	esac
 }

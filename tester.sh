@@ -34,10 +34,13 @@ echo "================= Starting types =============================="
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f abc
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 2.7171
 
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l option3
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l option2
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -e option3
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -e option2
 
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 2.7171 -n -t
+
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 00:70:00
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 12:34:56
 
 echo -e "\n================= Starting mandatory =======================\n"
 read -p "Press [Enter] key to continue..."
