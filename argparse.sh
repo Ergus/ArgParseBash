@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 
-# This is a simple script that emulates the most basic functionality
-# in the python's argparse library for bash.
-# The script defines CL arguments that can be accessed throw global variables.
-# It uses internally the getopts builtin bash function to allow arguments
-# with spaces and optional arguments.
-# This is a WIP and of course can be improved, if you use/improve it
-# or you find any error/issue, please, contact me in order to improve,
-# correct or add you as a collaborator in this project.
+# This is a simple script that emulates the most basic functionality in the
+# python's argparse library for bash. The script defines CL arguments that can
+# be accessed throw global variables.
 #
-# This is under GPLv3 license
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3.
 #
-# author: Jimmy Aguilar Mena
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Copyright (c) 2018 Jimmy Aguilar Mena.
 # email: kratsbinovish@gmail.com
 # date: 06/03/2018
 

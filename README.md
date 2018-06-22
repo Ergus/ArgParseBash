@@ -88,6 +88,4 @@ This is under GPLv3 license
 
 **author:** Jimmy Aguilar Mena
 
-**email:** kratsbinovish@gmail.com
-
 **date:** 06/03/2018
