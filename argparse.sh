@@ -22,16 +22,17 @@
 
 # Declare global variables, I would prefer some level of encapsulation here,
 # but there is not time now.
+
 set -e
-nargs=0					   # number of total arguments (unused now)
-opt_chars=""			   # chain to parse
-declare -A ARGS			   # associative array for argument/value
+nargs=0			   # number of total arguments (unused now)
+opt_chars=""		   # chain to parse
+declare -A ARGS		   # associative array for argument/value
 declare -A LONG_ARGS	   # associative array for long_argument/value
 declare -A MAP_LONG_ARGS   # associative array argument/long_argument
 declare -A MAP_ARGS_LONG   # associative array long_argument/argument
 declare -A HELP_ARGS	   # associative array for argument/help_string
 declare -A MANDATORY	   # list for mandatory arguments
-declare -A ARG_TYPE		   # list for mandatory arguments
+declare -A ARG_TYPE	   # list for mandatory arguments
 declare -A ENUMS           # list of valid parameters for lists
 
 VALID_TYPES="string int float bool path file enum timer"
@@ -70,21 +71,21 @@ function add_argument() {
 	declare -A arg=([h]="No documented option")
 	while getopts "a:l:h:d:t:e:" o; do # Read the function arguments -a mandatory
 		case $o in
-			a) arg[a]=${OPTARG} ;;			# argument
-			l) arg[l]=${OPTARG} ;;			# long argument
-			h) arg[h]=${OPTARG} ;;			# help
-			d) arg[d]=${OPTARG}	;;			# default value
-			t) arg[t]=${OPTARG}	;;			# expected type
-			e) arg[e]=${OPTARG}	;;          # enum (if -t enum)
+			a) arg[a]=${OPTARG} ;;	# argument
+			l) arg[l]=${OPTARG} ;;	# long argument
+			h) arg[h]=${OPTARG} ;;	# help
+			d) arg[d]=${OPTARG} ;;	# default value
+			t) arg[t]=${OPTARG} ;;	# expected type
+			e) arg[e]=${OPTARG} ;;  # enum (if -t enum)
 			*) echo "Unknown option "$o >&2
 		esac
 	done
 
-	if [ -n ${arg[a]} ]; then				# a short option is mandatory (-a before), check it
-		opt_chars+=${arg[a]}				# append option to the format
-		local def_val=empty					# default is always false
-		ARG_TYPE[${arg[a]}]=string			# Argument type, default string for all=
-		MANDATORY[${arg[a]}]=true			# Arguments mandatory by default
+	if [ -n ${arg[a]} ]; then		# a short option is mandatory (-a before), check it
+		opt_chars+=${arg[a]}		# append option to the format
+		local def_val=empty		# default is always false
+		ARG_TYPE[${arg[a]}]=string	# Argument type, default string for all=
+		MANDATORY[${arg[a]}]=true	# Arguments mandatory by default
 
 		# Set type (default string)
 		if [[ -n ${arg[t]} ]]; then
@@ -127,13 +128,13 @@ function add_argument() {
 		fi
 
 		# assign always a value (empty if not)
-		ARGS[${arg[a]}]=${def_val}			   # add the vale in the array!!
+		ARGS[${arg[a]}]=${def_val}			# add the vale in the array!!
 
 		# the long option
 		if [[ -n ${arg[l]} ]]; then
 			LONG_ARGS[${arg[l]}]=${def_val}
-			MAP_LONG_ARGS[${arg[a]}]=${arg[l]}		# for forward search fast
-			MAP_ARGS_LONG[${arg[l]}]=${arg[a]}		# for backward search fast
+			MAP_LONG_ARGS[${arg[a]}]=${arg[l]}	# for forward search fast
+			MAP_ARGS_LONG[${arg[l]}]=${arg[a]}	# for backward search fast
 		fi
 
 		#always set a Help, at least say is empty
@@ -151,31 +152,31 @@ function parse_args() {
 	# for example should be called as: parse_args "$@"
 
 	local largs=${MAP_LONG_ARGS[@]}		 # create a string with all the long args
-	local OPTIND						 # local index
+	local OPTIND				 # local index
 	local short="" long=""
 
-	while getopts ${opt_chars}"-:" o; do # parse -short and --long options
+	while getopts ${opt_chars}"-:" o; do     # parse -short and --long options
 
-		[[ $o = "?" ]] && continue		 # assert is a valid option
+		[[ $o = "?" ]] && continue	 # assert is a valid option
 		value=empty
 
-		if [[ $o = "-" ]]; then		# long options filtered by hand
+		if [[ $o = "-" ]]; then		 # long options filtered by hand
 			opt=${OPTARG}
 			[[ ${opt} =~ "=" ]] && value=${opt#*=} && opt=${opt%=$value}  # split
-			[[ -z $value ]] && value=empty		  # empty value means empty
+			[[ -z $value ]] && value=empty		# empty value means empty
 
-			if [[ ${largs} =~ ${opt} ]]; then	  # check if long option exists
-				short=${MAP_ARGS_LONG[$opt]}	  # corresponding short opt
+			if [[ ${largs} =~ ${opt} ]]; then	# check if long option exists
+				short=${MAP_ARGS_LONG[$opt]}	# corresponding short opt
 				long=${opt}
 			else					# if no long option exist with this name
 				echo "Unknown option: "$opt >&2
 				continue
 			fi
-		else								   # short options (already filtered)
-			short=$o						   # set them
+		else						# short options (already filtered)
+			short=$o			        # set them
 			[[ ${opt_chars} =~ ${short}":" ]] && value=$OPTARG
 
-			long=${MAP_LONG_ARGS[$o]}		   # search if exists corresponding long
+			long=${MAP_LONG_ARGS[$o]}		# search if exists corresponding long
 		fi
 
 		# type validation here if needed
@@ -186,8 +187,8 @@ function parse_args() {
 		local valid=$(check ${short} ${value})
 		if [[ ${valid} = "true" ]]; then
 			# assign
-			ARGS[$short]="${value}"					# if we arrive here always set a value
-			[[ -n ${long} ]] && LONG_ARGS[$long]=${value}	 # set long IF it exists
+			ARGS[$short]="${value}"				# if we arrive here always set a value
+			[[ -n ${long} ]] && LONG_ARGS[$long]=${value}	# set long IF it exists
 		else
 			echo -n "Invalid value \"${value}\" for option \"-${short}\": "
 			if [[ ${ARG_TYPE[${short}]} = "enum" ]]; then
