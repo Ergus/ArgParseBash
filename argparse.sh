@@ -219,6 +219,8 @@ function parse_args() {
 
 function printargs() {
 	# Prints the arguments (short and long) with its values and doc-string 
+	# The first argument is set as a prefix for every line
+	local prefix=$1
 	for i in "${!ARGS[@]}"; do
 		local bo=" " bc=" "
 		local long="--" def=""
@@ -228,6 +230,6 @@ function printargs() {
 
 		[[ -n ${MAP_LONG_ARGS[$i]} ]] && long="|${bo}--${MAP_LONG_ARGS[$i]}${bc}"
 
-		echo -e "arg: ${short}${long}: (${ARG_TYPE[$i]}:${ARGS[$i]}) ${HELP_ARGS[$i]} "
+		echo -e "${prefix}arg: ${short}${long}: (${ARG_TYPE[$i]}:${ARGS[$i]}) ${HELP_ARGS[$i]} "
 	done
 }
