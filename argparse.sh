@@ -24,16 +24,16 @@
 # but there is not time now.
 
 set -e
-nargs=0			   # number of total arguments (unused now)
-opt_chars=""		   # chain to parse
-declare -A ARGS		   # associative array for argument/value
-declare -A LONG_ARGS	   # associative array for long_argument/value
-declare -A MAP_LONG_ARGS   # associative array argument/long_argument
-declare -A MAP_ARGS_LONG   # associative array long_argument/argument
-declare -A HELP_ARGS	   # associative array for argument/help_string
-declare -A MANDATORY	   # list for mandatory arguments
-declare -A ARG_TYPE	   # list for mandatory arguments
-declare -A ENUMS           # list of valid parameters for lists
+nargs=0						# number of total arguments (unused now)
+opt_chars=""				# chain to parse
+declare -A ARGS				# associative array for argument/value
+declare -A LONG_ARGS		# associative array for long_argument/value
+declare -A MAP_LONG_ARGS	# associative array argument/long_argument
+declare -A MAP_ARGS_LONG	# associative array long_argument/argument
+declare -A HELP_ARGS		# associative array for argument/help_string
+declare -A MANDATORY		# list for mandatory arguments
+declare -A ARG_TYPE			# list for mandatory arguments
+declare -A ENUMS			# list of valid parameters for lists
 
 VALID_TYPES="string int float bool path file enum timer"
 
@@ -76,14 +76,14 @@ function add_argument() {
 			h) arg[h]=${OPTARG} ;;	# help
 			d) arg[d]=${OPTARG} ;;	# default value
 			t) arg[t]=${OPTARG} ;;	# expected type
-			e) arg[e]=${OPTARG} ;;  # enum (if -t enum)
+			e) arg[e]=${OPTARG} ;;	# enum (if -t enum)
 			*) echo "Unknown option "$o >&2
 		esac
 	done
 
 	if [ -n ${arg[a]} ]; then		# a short option is mandatory (-a before), check it
 		opt_chars+=${arg[a]}		# append option to the format
-		local def_val=empty		# default is always false
+		local def_val=empty			# default is always false
 		ARG_TYPE[${arg[a]}]=string	# Argument type, default string for all=
 		MANDATORY[${arg[a]}]=true	# Arguments mandatory by default
 
@@ -151,16 +151,16 @@ function parse_args() {
 	# This function parses the command line arguments
 	# for example should be called as: parse_args "$@"
 
-	local largs=${MAP_LONG_ARGS[@]}		 # create a string with all the long args
-	local OPTIND				 # local index
+	local largs=${MAP_LONG_ARGS[@]}		# create a string with all the long args
+	local OPTIND						# local index
 	local short="" long=""
 
-	while getopts ${opt_chars}"-:" o; do     # parse -short and --long options
+	while getopts ${opt_chars}"-:" o; do	# parse -short and --long options
 
-		[[ $o = "?" ]] && continue	 # assert is a valid option
+		[[ $o = "?" ]] && exit				# assert is a valid option
 		value=empty
 
-		if [[ $o = "-" ]]; then		 # long options filtered by hand
+		if [[ $o = "-" ]]; then				# long options filtered by hand
 			opt=${OPTARG}
 			[[ ${opt} =~ "=" ]] && value=${opt#*=} && opt=${opt%=$value}  # split
 			[[ -z $value ]] && value=empty		# empty value means empty
@@ -173,7 +173,7 @@ function parse_args() {
 				continue
 			fi
 		else						# short options (already filtered)
-			short=$o			        # set them
+			short=$o				# set them
 			[[ ${opt_chars} =~ ${short}":" ]] && value=$OPTARG
 
 			long=${MAP_LONG_ARGS[$o]}		# search if exists corresponding long
