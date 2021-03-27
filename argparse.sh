@@ -77,7 +77,7 @@ function add_argument() {
 			d) arg[d]=${OPTARG} ;;	# default value
 			t) arg[t]=${OPTARG} ;;	# expected type
 			e) arg[e]=${OPTARG} ;;	# enum (if -t enum)
-			*) echo "Unknown option "$o >&2
+			*) echo "Unknown option $o" >&2
 		esac
 	done
 
@@ -169,7 +169,7 @@ function parse_args() {
 				short=${MAP_ARGS_LONG[$opt]}	# corresponding short opt
 				long=${opt}
 			else					# if no long option exist with this name
-				echo "Unknown option: "$opt >&2
+				echo "Unknown option: $opt" >&2
 				continue
 			fi
 		else						# short options (already filtered)
@@ -184,6 +184,7 @@ function parse_args() {
 			[[ ${ARGS[$short]} = true ]] && value=false || value=true
 		fi
 
+		# Validate the argument's value.
 		local valid=$(check ${short} ${value})
 		if [[ ${valid} = "true" ]]; then
 			# assign
@@ -202,7 +203,7 @@ function parse_args() {
 	done
 	shift $((OPTIND-1))
 
-	# Check mandatory arguments
+	# Check mandatory arguments after all parse
 	local invalid=0
 	for i in "${!MANDATORY[@]}"; do
 		if [[ ${ARGS[$i]} = empty ]] && [[ ${MANDATORY[$i]} = true ]]; then
@@ -212,9 +213,12 @@ function parse_args() {
 	done
 
 	if (( invalid > 0 )) ; then
-		echo "${invalid} mandatory command line arguments missing" >&2
+		echo "Error: ${invalid} mandatory command line arguments missing" >&2
 		exit 1
 	fi
+
+	# Assign rest of arguments in ARGS[REST][1] ARGS[REST][2]...
+	ARGS["REST"]=$@
 }
 
 function printargs() {
