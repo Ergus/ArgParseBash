@@ -39,24 +39,27 @@ VALID_TYPES="string int float bool path file enum timer"
 
 # Arguments type tests
 # Receives the argument and the value
-function check () {
+function argparse_check () {
 	if [[ -z $2 ]] || [[ -z ${ARG_TYPE[$1]} ]]; then   # Check
 		printf "Error using %s function" $0 >&2
 		exit 1
 	fi
 	local type=${ARG_TYPE[$1]}
 	local value=$2
+	local found="invalid"
 	case $type in
-		string) echo true ;;
-		int) [[ $value =~ ^-?[0-9]+$ ]] && echo true || echo false ;;
-		float) [[ $value =~ ^-?[0-9]+.?[0-9]+?$ ]] && echo true || echo false ;;
-		bool) [[ "true false" =~ $value ]] && echo true || echo false ;;
-		path) [[ -d $value ]] && echo true || echo false ;;
-		file) [[ -f $value ]] && echo true || echo false ;;
-		enum) [[ "${ENUMS[$1]}" =~ $value ]] && echo true || echo false ;;
-		timer) [[ $value =~ ^[0-9]+:?[0-5][0-9]:[0-5][0-9]$ ]] && echo true || echo false ;;
-		*) echo false ;;
+		string) found=$value ;;
+		int) [[ $value =~ ^-?[0-9]+$ ]] && found=$value;;
+		float) [[ $value =~ ^-?[0-9]+.?[0-9]+?$ ]] && found=$value;;
+		bool) [[ "true false" =~ $value ]] && found=$value;;
+		path) [[ -d $value ]] && found=$value ;;
+		file) [[ -f $value ]] && found=$value ;;
+		enum) [[ "${ENUMS[$1]}" =~ $value ]] && found=$value ;;
+		timer) [[ $value =~ ^[0-9]+:?[0-5][0-9]:[0-5][0-9]$ ]] && found=$value ;;
+		*) found="invalid" ;;
 	esac
+
+	echo ${found}
 }
 
 function add_argument() {
@@ -115,14 +118,14 @@ function add_argument() {
 			# if default value provided use it else it is mandatory
 			opt_chars+=":"
 			if [[ -n ${arg[d]} ]]; then
-				local valid=$(check ${arg[a]} ${arg[d]})
-				if [[ ${valid} = "true" ]]; then
-					def_val=${arg[d]}
-					MANDATORY[${arg[a]}]=false
+				local default_value=$(argparse_check ${arg[a]} ${arg[d]})
+				if [[ ${default_value} = "invalid" ]]; then
+				   echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\" " >&2
+				   echo "This is an error in the script"
+				   exit 1
 				else
-					echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\" " >&2
-					echo "This is an error in the script"
-					exit 1
+					def_val=${default_value}
+					MANDATORY[${arg[a]}]=false
 				fi
 			fi
 		fi
@@ -184,20 +187,19 @@ function parse_args() {
 			[[ ${ARGS[$short]} = true ]] && value=false || value=true
 		fi
 
-		# Validate the argument's value.
-		local valid=$(check ${short} ${value})
-		if [[ ${valid} = "true" ]]; then
-			# assign
-			ARGS[$short]="${value}"				# if we arrive here always set a value
-			[[ -n ${long} ]] && LONG_ARGS[$long]=${value}	# set long IF it exists
-		else
-			echo -n "Invalid value \"${value}\" for option \"-${short}\": "
+		local parsed_value=$(argparse_check ${short} ${value})
+		if [[ ${parsed_value} = "invalid" ]]; then
+			echo -n "Invalid value \"${parsed_value}\" for option \"-${short}\": "
 			if [[ ${ARG_TYPE[${short}]} = "enum" ]]; then
 				echo -e "valid values are:\n\t${ENUMS[${short}]}"
 			else
 				echo "it is not a valid \"${ARG_TYPE[${short}]}\" " >&2
 			fi
 			echo -e "\tKept value: ${ARGS[${short}]}" >&2
+		else
+			# assign
+			ARGS[$short]=${parsed_value}           # if we arrive here always set a value
+			[[ -n ${long} ]] && LONG_ARGS[$long]=${parsed_value}  # set long IF it exists
 		fi
 
 	done
