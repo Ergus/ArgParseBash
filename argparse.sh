@@ -35,7 +35,7 @@ declare -A MANDATORY	   # list for mandatory arguments
 declare -A ARG_TYPE	       # list for mandatory arguments
 declare -A ENUMS           # list of valid parameters for lists
 
-VALID_TYPES="string int float bool path file enum timer"
+VALID_TYPES="string int float bool path file enum timer array"
 
 # Arguments type tests
 # Receives the argument and the value
@@ -49,13 +49,14 @@ function argparse_check () {
 	local found="invalid"
 	case $type in
 		string) found=$value ;;
-		int) [[ $value =~ ^-?[0-9]+$ ]] && found=$value;;
-		float) [[ $value =~ ^-?[0-9]+.?[0-9]+?$ ]] && found=$value;;
-		bool) [[ "true false" =~ $value ]] && found=$value;;
+		int) [[ $value =~ (^-?[0-9]+$) ]] && found=${BASH_REMATCH[1]} ;;
+		float) [[ $value =~ (^-?[0-9]+.?[0-9]+?$) ]] && found=${BASH_REMATCH[1]} ;;
+		bool) [[ $value =~ (^true$|^false$) ]] && found=${BASH_REMATCH[1]} ;;
 		path) [[ -d $value ]] && found=$value ;;
 		file) [[ -f $value ]] && found=$value ;;
-		enum) [[ "${ENUMS[$1]}" =~ $value ]] && found=$value ;;
-		timer) [[ $value =~ ^[0-9]+:?[0-5][0-9]:[0-5][0-9]$ ]] && found=$value ;;
+		enum) [[ $value =~ (^${ENUMS[$1]//,/'$|^'}$) ]] && found=${BASH_REMATCH[1]} ;;
+		timer) [[ $value =~ (^[0-9]+:?[0-5][0-9]:[0-5][0-9]$) ]] && found=${BASH_REMATCH[1]} ;;
+		array) [[ $value =~ ^(([0-9]+,)+?[0-9]+)$ ]] && found=${BASH_REMATCH[1]//,/ } ;;
 		*) found="invalid" ;;
 	esac
 
