@@ -58,6 +58,9 @@ echo "================= Starting types =============================="
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 00:70:00
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 12:34:56
 
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 6,7,89,0
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 8
+
 echo -e "\n================= Starting mandatory =======================\n"
 read -p "Press [Enter] key to continue..."
 
@@ -67,6 +70,4 @@ read -p "Press [Enter] key to continue..."
 ./test_mandatory.sh -m value
 ./test_mandatory.sh -b -m value
 ./test_mandatory.sh -m value -d value
-
-
 

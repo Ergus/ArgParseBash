@@ -54,7 +54,7 @@ add_argument -a e -l enum -h "Enum option" -t enum -e option1,option2 -d option1
 
 add_argument -a w -l walltime -h "Time option" -t timer -d 00:00:10
 
-add_argument -a l -l list -h "Number list" -t array -d 1,34,5,6
+add_argument -a l -l intlist -h "Number list" -t list -d 1,34,5,6
 
 
 echo -e "\n Before"
@@ -64,3 +64,8 @@ parse_args "$@"
 echo -e "\n After"
 
 printargs
+
+echo "Test list iteration"
+for i in ${ARGS[l]}; do
+	echo $i
+done
