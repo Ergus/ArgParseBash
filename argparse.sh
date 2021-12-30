@@ -221,7 +221,12 @@ function parse_args() {
 	fi
 
 	# Assign rest of arguments in ARGS[REST][1] ARGS[REST][2]...
-	[[ $@ =~ ^[[:blank:]]*$ ]] || ARGS["REST"]=$@
+	if ! [[ $@ =~ ^[[:blank:]]*$ ]]; then
+		ARGS["REST"]=$@
+		ARG_TYPE["REST"]=list
+		HELP_ARGS["REST"]="REST of arguments"
+		MANDATORY["REST"]=false
+	fi
 }
 
 function printargs() {
@@ -230,11 +235,11 @@ function printargs() {
 	local prefix=$1
 	for i in "${!ARGS[@]}"; do
 		local bo=" " bc=" "
-		local long="--" def=""
+		local long="" def=""
 		local printval=${ARGS[$i]}
 
 		[[ "${MANDATORY[$i]}" = false ]] && bo="[" && bc="]"
-		local short=${bo}-${i}${bc}
+		local short="${bo}-${i}${bc}"
 
 		[[ -n ${MAP_LONG_ARGS[$i]} ]] && long="|${bo}--${MAP_LONG_ARGS[$i]}${bc}"
 
