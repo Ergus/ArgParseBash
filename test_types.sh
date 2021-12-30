@@ -50,9 +50,12 @@ add_argument -a n -l notrue -h "Notrue option" -t bool
 add_argument -a p -l path -h "Path option" -t path -d $HOME
 add_argument -a a -l archive -h "Archive option" -t file -d /etc/fstab
 
-add_argument -a e -l enum -h "Enum option" -t enum -e "option1 option2" -d option1
+add_argument -a e -l enum -h "Enum option" -t enum -e option1,option2 -d option1
 
 add_argument -a w -l walltime -h "Time option" -t timer -d 00:00:10
+
+add_argument -a l -l list -h "Number list" -t array -d 1,34,5,6
+
 
 echo -e "\n Before"
 printargs
