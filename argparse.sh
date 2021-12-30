@@ -35,7 +35,7 @@ declare -A MANDATORY	   # list for mandatory arguments
 declare -A ARG_TYPE	       # list for mandatory arguments
 declare -A ENUMS           # list of valid parameters for lists
 
-VALID_TYPES="string int float bool path file enum timer array"
+VALID_TYPES="string int float bool path file enum timer list"
 
 # Arguments type tests
 # Receives the argument and the value
@@ -56,7 +56,7 @@ function argparse_check () {
 		file) [[ -f $value ]] && found=$value ;;
 		enum) [[ $value =~ (^${ENUMS[$1]//,/'$|^'}$) ]] && found=${BASH_REMATCH[1]} ;;
 		timer) [[ $value =~ (^[0-9]+:?[0-5][0-9]:[0-5][0-9]$) ]] && found=${BASH_REMATCH[1]} ;;
-		array) [[ $value =~ ^(([0-9]+,)+?[0-9]+)$ ]] && found=${BASH_REMATCH[1]//,/ } ;;
+		list) [[ $value =~ ^(([0-9]+,)+?[0-9]+)$ ]] && found=${BASH_REMATCH[1]//,/ } ;;
 		*) found="invalid" ;;
 	esac
 
@@ -231,12 +231,16 @@ function printargs() {
 	for i in "${!ARGS[@]}"; do
 		local bo=" " bc=" "
 		local long="--" def=""
+		local printval=${ARGS[$i]}
 
 		[[ "${MANDATORY[$i]}" = false ]] && bo="[" && bc="]"
 		local short=${bo}-${i}${bc}
 
 		[[ -n ${MAP_LONG_ARGS[$i]} ]] && long="|${bo}--${MAP_LONG_ARGS[$i]}${bc}"
 
-		echo -e "${prefix}arg: ${short}${long}: (${ARG_TYPE[$i]}:${ARGS[$i]}) ${HELP_ARGS[$i]} "
+		[[ ${ARG_TYPE[$i]} = list ]] && printval=\[${printval// /,}\] # Reformat list.
+
+		echo -e "${prefix}arg: ${short}${long}: (${ARG_TYPE[$i]}:${printval}) ${HELP_ARGS[$i]} "
+
 	done
 }
