@@ -190,9 +190,9 @@ function parse_args() {
 
 		local parsed_value=$(argparse_check ${short} ${value})
 		if [[ ${parsed_value} = "invalid" ]]; then
-			echo -n "Invalid value \"${parsed_value}\" for option \"-${short}\": "
+			echo -n "Invalid value \"${value}\" for option \"-${short}\": "
 			if [[ ${ARG_TYPE[${short}]} = "enum" ]]; then
-				echo -e "valid values are:\n\t${ENUMS[${short}]}"
+				echo -e "valid values are:\n\t[${ENUMS[${short}]}]"
 			else
 				echo "it is not a valid \"${ARG_TYPE[${short}]}\" " >&2
 			fi
@@ -221,7 +221,7 @@ function parse_args() {
 	fi
 
 	# Assign rest of arguments in ARGS[REST][1] ARGS[REST][2]...
-	ARGS["REST"]=$@
+	[[ $@ =~ ^[[:blank:]]*$ ]] || ARGS["REST"]=$@
 }
 
 function printargs() {
