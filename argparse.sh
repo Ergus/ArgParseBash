@@ -121,9 +121,9 @@ function add_argument() {
 			if [[ -n ${arg[d]} ]]; then
 				local default_value=$(argparse_check ${arg[a]} ${arg[d]})
 				if [[ ${default_value} = "invalid" ]]; then
-				   echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\" " >&2
-				   echo "This is an error in the script"
-				   exit 1
+					echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\" " >&2
+					echo "This is an error in the script"
+					exit 1
 				else
 					def_val=${default_value}
 					MANDATORY[${arg[a]}]=false
