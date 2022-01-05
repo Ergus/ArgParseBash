@@ -24,15 +24,15 @@
 # but there is not time now.
 
 set -e
-nargs=0			           # number of total arguments (unused now)
-opt_chars=""		       # chain to parse
-declare -A ARGS		       # associative array for argument/value
-declare -A LONG_ARGS	   # associative array for long_argument/value
+nargs=0                    # number of total arguments (unused now)
+opt_chars=""               # chain to parse
+declare -A ARGS            # associative array for argument/value
+declare -A LONG_ARGS       # associative array for long_argument/value
 declare -A MAP_LONG_ARGS   # associative array argument/long_argument
 declare -A MAP_ARGS_LONG   # associative array long_argument/argument
-declare -A HELP_ARGS	   # associative array for argument/help_string
-declare -A MANDATORY	   # list for mandatory arguments
-declare -A ARG_TYPE	       # list for mandatory arguments
+declare -A HELP_ARGS       # associative array for argument/help_string
+declare -A MANDATORY       # list for mandatory arguments
+declare -A ARG_TYPE        # list for mandatory arguments
 declare -A ENUMS           # list of valid parameters for lists
 
 VALID_TYPES="string int float bool path file enum timer list"
@@ -75,21 +75,21 @@ function add_argument() {
 	declare -A arg=([h]="No documented option")
 	while getopts "a:l:h:d:t:e:" o; do # Read the function arguments -a mandatory
 		case $o in
-			a) arg[a]=${OPTARG} ;;	# argument
-			l) arg[l]=${OPTARG} ;;	# long argument
-			h) arg[h]=${OPTARG} ;;	# help
-			d) arg[d]=${OPTARG} ;;	# default value
-			t) arg[t]=${OPTARG} ;;	# expected type
-			e) arg[e]=${OPTARG} ;;	# enum (if -t enum)
+			a) arg[a]=${OPTARG} ;;  # argument
+			l) arg[l]=${OPTARG} ;;  # long argument
+			h) arg[h]=${OPTARG} ;;  # help
+			d) arg[d]=${OPTARG} ;;  # default value
+			t) arg[t]=${OPTARG} ;;  # expected type
+			e) arg[e]=${OPTARG} ;;  # enum (if -t enum)
 			*) echo "Unknown option $o" >&2
 		esac
 	done
 
-	if [ -n ${arg[a]} ]; then		# a short option is mandatory (-a before), check it
-		opt_chars+=${arg[a]}		# append option to the format
-		local def_val="empty"		# default is always false
-		ARG_TYPE[${arg[a]}]=string	# Argument type, default string for all=
-		MANDATORY[${arg[a]}]=true	# Arguments mandatory by default
+	if [ -n ${arg[a]} ]; then       # a short option is mandatory (-a before), check it
+		opt_chars+=${arg[a]}        # append option to the format
+		local def_val="empty"       # default is always false
+		ARG_TYPE[${arg[a]}]=string  # Argument type, default string for all=
+		MANDATORY[${arg[a]}]=true   # Arguments mandatory by default
 
 		# Set type (default string)
 		if [[ -n ${arg[t]} ]]; then
@@ -132,13 +132,13 @@ function add_argument() {
 		fi
 
 		# assign always a value (empty if not)
-		ARGS[${arg[a]}]=${def_val}			# add the vale in the array!!
+		ARGS[${arg[a]}]=${def_val}              # add the vale in the array!!
 
 		# the long option
 		if [[ -n ${arg[l]} ]]; then
 			LONG_ARGS[${arg[l]}]=${def_val}
-			MAP_LONG_ARGS[${arg[a]}]=${arg[l]}	# for forward search fast
-			MAP_ARGS_LONG[${arg[l]}]=${arg[a]}	# for backward search fast
+			MAP_LONG_ARGS[${arg[a]}]=${arg[l]}  # for forward search fast
+			MAP_ARGS_LONG[${arg[l]}]=${arg[a]}  # for backward search fast
 		fi
 
 		#always set a Help, at least say is empty
@@ -230,7 +230,7 @@ function parse_args() {
 }
 
 function printargs() {
-	# Prints the arguments (short and long) with its values and doc-string 
+	# Prints the arguments (short and long) with its values and doc-string
 	# The first argument is set as a prefix for every line
 	local prefix=$1
 	for i in "${!ARGS[@]}"; do
