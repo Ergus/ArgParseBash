@@ -49,8 +49,8 @@ function argparse_check () {
 	local found="invalid"
 	case $type in
 		string) found=$value ;;
-		int) [[ $value =~ (^-?[0-9]+$) ]] && found=${BASH_REMATCH[1]} ;;
-		float) [[ $value =~ (^-?[0-9]+.?[0-9]+?$) ]] && found=${BASH_REMATCH[1]} ;;
+		int) [[ $value =~ (^[+-]?[0-9]+$) ]] && found=${BASH_REMATCH[1]} ;;
+		float) [[ $value =~ (^[+-]?[0-9]+.?[0-9]+?$) ]] && found=${BASH_REMATCH[1]} ;;
 		bool) [[ $value =~ (^true$|^false$) ]] && found=${BASH_REMATCH[1]} ;;
 		path) [[ -d $value ]] && found=$value ;;
 		file) [[ -f $value ]] && found=$value ;;
