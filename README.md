@@ -3,12 +3,15 @@ README
 
 This is a simple script and a test-program that emulates the argparse
 python-like functionality in bash.
+
 You can call the script with the options specified using the long
 and short names. For the usage, please, see the test examples scripts.
+[test_types.sh](test_types.sh)
+
 
 There are 4 functions:
 
-+ add_argument: to add comman line options
++ **add_argument**: to add comman line options.
 
 	The command line arguments can be defined with 5 options:
 
@@ -16,7 +19,9 @@ There are 4 functions:
 
 	- -l long name for argument [optional default: ""]
 
-	- -d default value [else, the argument becomes mandatory]
+	- -d default value [else, the argument becomes mandatory]. The
+      default value is checked to assert they follow a valid regex to
+      convert to the type.
 
 	- -h docstring [optional default: "Not documented"]
 
@@ -24,23 +29,34 @@ There are 4 functions:
       timer list) [optional default: string]
 
 	- -e The list of valid values when using enum. The argument is
-      used and required ONLY then -t enum. It expects a simple list
+      used and required ONLY when -t enum. It expects a simple list
       like: **opt1,opt2 ...**
 
-+ parse_args: to parse the command line arguments or any list
+	  Ex: `add_argument -a e -l myenum -h "Enum option" -t enum -e option1,option2 -d option1`
 
-	This one can be called passsing any list of arguments to process
-	for example "$@"
++ **parse_args**: to parse the command line arguments or any list
+
+	This one can be called passing any list of arguments to process
+	for example: `parse_args "$@"`
 
 	At the end of this function it checks that the mandatory arguments
     have a non-empty value.
 
-+ printargs: prints the arguments defined in the script and the values.
+	Every value is checked to assert they match a regex valid for
+    their type.
 
-	Useful for debug purposes and to print the help
++ **printargs**: prints the arguments defined in the script and the
+  values.
 
-+ check: checks the values to match the parameter types. This is an
-  internal function.
+	Useful for debug purposes and to print the help. This function can
+    receive a parameter to add as a prefix before every printed line;
+    this is useful to add comments before the printed lines:
+
+	Example: `printargs #`
+
++ **argparse_check**: checks the values to match the parameter
+  types. This is an internal function and the user shouldn't need to
+  use it.
 
 	The valid types are: (string int float bool path file enum timer list)
 
@@ -55,10 +71,11 @@ There are 4 functions:
 
 		mm and ss are limited to 00 -> 60. But H+ means any valid positive integer.
 
-	The **string** is not validated because all the bash strings are valid.
+	All the strings are valid but it is assumed that they don't
+    contain spaces.
 
-	In case of **list** currently the values are only integers and are
-    set like "1,2,34,56" (quotes not required.)
+	In case of **list** currently the valid values are only integers
+    and are set like "1,2,34,56" (quotes not required.)
 
 Accessing parameters
 --------------------
@@ -75,15 +92,15 @@ read the script.
 These names are forbidden because we use them internally, and they are
 public variables.
 
-+ ARGS: asociative array with the values, index *short* name
++ ARGS: associative array with the values, index *short* name. Ex: `${ARGS[e]}`
 
-+ LONG_ARGS: asociative array with the values, index *long* name
++ LONG_ARGS: associative array with the values, index *long* name. Ex: `${LONG_ARGS[myenum]}`
 
-+ MAP_LONG_ARGS: Map from *short* to *long* names
++ MAP_LONG_ARGS: Map from *short* to *long* names. Usually not needed by the user.
 
-+ MAP_ARGS_LONG: Map from *long* to *short* names
++ MAP_ARGS_LONG: Map from *long* to *short* names.  Usually not needed by the user
 
-+ HELP_ARGS: Help string arrays. Index *short*
++ HELP_ARGS: Help string arrays. Index *short*.
 
 + MANDATORY: Array that returns is the argument is mandatory
 
@@ -94,10 +111,29 @@ or you find any error/issue, please, contact me in order to improve,
 correct or add you as a collaborator in this project.
 
 The bool variables do not require a parameter, in fact it is ignored
-if provided and the variable is only switched between true and false.
+if provided and the variable is only switched between true and
+false. If you want to use a boolean variable that accepts `true` or
+`false` y recommend to use an enum instead like:
+
+```
+add_argument -a b -l mybool -h "Bool option with input" -t enum -e true,false -d false
+```
 
 An extra **REST** argument is automatically added when some extra
-command line arguments are added at the end of the input.
+command line arguments are added at the end of the input. This can be
+accessed like: `ARGS[REST]` and in spite of it is not a list, it is
+iterable or can be passed to other commands. Ex: `echo ${ARGS[REST]} |
+wc -w` returns the number of elements (words) in the list.
+
+Or:
+
+```
+for i in ${ARGS[REST]}; do
+	echo $i
+done
+```
+
+is also valid.
 
 This is under GPLv3 license
 
