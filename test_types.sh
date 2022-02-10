@@ -36,24 +36,36 @@ cat <<EOF
 
 EOF
 
+# To see how to call this file (and what argparse.sh does) look at `tester.sh`.
+
 echo "Command: $0 $@"
 
 source argparse.sh
 
+# Adding string, int and float.
 add_argument -a s -l string -h "String parameter" -t string -d "mystring"
 add_argument -a i -l int -h "int parameter" -t int -d 100
 add_argument -a f -l float -h "float parameter" -t float -d 3.14
 
+# Add a toggle (boolean variable). see comment in the Readme.
 add_argument -a t -l true -h "True option" -t bool -d true
 add_argument -a n -l notrue -h "Notrue option" -t bool
 
+# Add specialized variables path and archive. These are checked in the
+# system to assert they exist.
 add_argument -a p -l path -h "Path option" -t path -d $HOME
 add_argument -a a -l archive -h "Archive option" -t file -d /etc/fstab
 
+# Add an enum variable. This one only can take one f the specified values in -e.
 add_argument -a e -l enum -h "Enum option" -t enum -e option1,option2 -d option1
 
+# Add a walltime variable. Expects a format H+:mm:ss
 add_argument -a w -l walltime -h "Time option" -t timer -d 00:00:10
 
+# Add a list variable. Only supports list of numbers. And can be
+# specified as numbers separated by comas, with no spaces. The dalues
+# are stores internally as space separated list, so they can be
+# iterated and counted like the variable REST (see Readme.)
 add_argument -a l -l intlist -h "Number list" -t list -d 1,34,5,6
 
 

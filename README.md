@@ -15,20 +15,20 @@ There are 4 functions:
 
 	The command line arguments can be defined with 5 options:
 
-	- -a short name for argument [mandatory]
+	- **-a** short name for argument [mandatory]
 
-	- -l long name for argument [optional default: ""]
+	- **-l** long name for argument [optional default: ""]
 
-	- -d default value [else, the argument becomes mandatory]. The
+	- **-d** default value [else, the argument becomes mandatory]. The
       default value is checked to assert they follow a valid regex to
       convert to the type.
 
-	- -h docstring [optional default: "Not documented"]
+	- **-h** docstring [optional default: "Not documented"]
 
-	- -t Type of the parameters (string int float bool path file enum
+	- **-t** Type of the parameters (string int float bool path file enum
       timer list) [optional default: string]
 
-	- -e The list of valid values when using enum. The argument is
+	- **-e** The list of valid values when using enum. The argument is
       used and required ONLY when -t enum. It expects a simple list
       like: **opt1,opt2 ...**
 
@@ -63,27 +63,27 @@ There are 4 functions:
 	In case of **path** and **file** it checks that the path or the
     file exists in the filesystem.
 
-	In case of **float** it accepts formats like 3.14 or 3.
+	In case of **float** it accepts formats like `3.14` or `3.`
 
 	In case of **enum** if checks that the enum is one of the valid options.
 
-	In case of **timer** the expected format is: H+:mm:ss.
-
-		mm and ss are limited to 00 -> 60. But H+ means any valid positive integer.
+	In case of **timer** the expected format is `H+:mm:ss`. `mm` and
+    `ss` are limited to 00 -> 60. But `H+` means any valid positive
+    integer.
 
 	All the strings are valid but it is assumed that they don't
     contain spaces.
 
 	In case of **list** currently the valid values are only integers
-    and are set like "1,2,34,56" (quotes not required.)
+    and are set like `"1,2,34,56"` (quotes not required.)
 
 Accessing parameters
 --------------------
 
 The values can be accessed throw the global arrays created as
-ARGS[short] or LONG_ARGS[long].
+`ARGS[short]` or `LONG_ARGS[long]`.
 
-The help can be accessed as HELP_ARGS[short].
+The help can be accessed as `HELP_ARGS[short]`.
 
 There are names restrictions for the script variables as all the
 variables in bash are public by default. Also, for simplicity, please
@@ -92,19 +92,19 @@ read the script.
 These names are forbidden because we use them internally, and they are
 public variables.
 
-+ ARGS: associative array with the values, index *short* name. Ex: `${ARGS[e]}`
++ **ARGS**: associative array with the values, index *short* name. Ex: `${ARGS[e]}`
 
-+ LONG_ARGS: associative array with the values, index *long* name. Ex: `${LONG_ARGS[myenum]}`
++ **LONG_ARGS**: associative array with the values, index *long* name. Ex: `${LONG_ARGS[myenum]}`
 
-+ MAP_LONG_ARGS: Map from *short* to *long* names. Usually not needed by the user.
++ **MAP_LONG_ARGS**: Map from *short* to *long* names. Usually not needed by the user.
 
-+ MAP_ARGS_LONG: Map from *long* to *short* names.  Usually not needed by the user
++ **MAP_ARGS_LONG**: Map from *long* to *short* names.  Usually not needed by the user
 
-+ HELP_ARGS: Help string arrays. Index *short*.
++ **HELP_ARGS**: Help string arrays. Index *short*.
 
-+ MANDATORY: Array that returns is the argument is mandatory
++ **MANDATORY**: Array that returns is the argument is mandatory
 
-+ ARG_TYPE: Array that returns the argument type
++ **ARG_TYPE**: Array that returns the argument type
 
 This is a WIP and of course can be improved, if you use/improve it
 or you find any error/issue, please, contact me in order to improve,
