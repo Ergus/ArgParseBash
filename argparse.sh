@@ -27,7 +27,6 @@ set -e
 nargs=0                    # number of total arguments (unused now)
 opt_chars=""               # chain to parse
 declare -A ARGS            # associative array for argument/value
-declare -A LONG_ARGS       # associative array for long_argument/value
 declare -A MAP_LONG_ARGS   # associative array argument/long_argument
 declare -A MAP_ARGS_LONG   # associative array long_argument/argument
 declare -A HELP_ARGS       # associative array for argument/help_string
@@ -41,7 +40,7 @@ VALID_TYPES="string int float bool path file enum timer list"
 # Receives the argument and the value
 function argparse_check () {
 	if [[ -z $2 ]] || [[ -z ${ARG_TYPE[$1]} ]]; then   # Check
-		printf "Error using %s function" $0 >&2
+		echo "Error using $0 function" >&2
 		exit 1
 	fi
 	local type=${ARG_TYPE[$1]}
@@ -60,14 +59,14 @@ function argparse_check () {
 		*) found="invalid" ;;
 	esac
 
-	echo ${found}
+	echo "${found}"
 }
 
 function add_argument() {
 	# This function adds command line parameters
 
 	if [[ -z $1 ]]; then   # Check
-		printf "Usage %s -a argname -l longname -h helstring -d defaultvalue\n" $0 >&2
+		echo "Usage $0 -a argname -l longname -h helstring -d defaultvalue" >&2
 		exit 1
 	fi
 
@@ -85,7 +84,7 @@ function add_argument() {
 		esac
 	done
 
-	if [ -n ${arg[a]} ]; then       # a short option is mandatory (-a before), check it
+	if [[ -n ${arg[a]} ]]; then       # a short option is mandatory (-a before), check it
 		opt_chars+=${arg[a]}        # append option to the format
 		local def_val="empty"       # default is always false
 		ARG_TYPE[${arg[a]}]=string  # Argument type, default string for all=
@@ -119,7 +118,8 @@ function add_argument() {
 			# if default value provided use it else it is mandatory
 			opt_chars+=":"
 			if [[ -n ${arg[d]} ]]; then
-				local default_value=$(argparse_check ${arg[a]} ${arg[d]})
+				local default_value
+				default_value=$(argparse_check "${arg[a]}" "${arg[d]}")
 				if [[ ${default_value} = "invalid" ]]; then
 					echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\" " >&2
 					echo "This is an error in the script"
@@ -136,7 +136,6 @@ function add_argument() {
 
 		# the long option
 		if [[ -n ${arg[l]} ]]; then
-			LONG_ARGS[${arg[l]}]=${def_val}
 			MAP_LONG_ARGS[${arg[a]}]=${arg[l]}  # for forward search fast
 			MAP_ARGS_LONG[${arg[l]}]=${arg[a]}  # for backward search fast
 		fi
@@ -155,25 +154,25 @@ function parse_args() {
 	# This function parses the command line arguments
 	# for example should be called as: parse_args "$@"
 
-	local largs=${MAP_LONG_ARGS[@]}        # create a string with all the long args
+	local largs=${MAP_LONG_ARGS[*]}        # create a string with all the long args
 	local OPTIND                           # local index
 	local short="" long=""
 
-	while getopts ${opt_chars}"-:" o; do   # parse -short and --long options
+	while getopts "${opt_chars}-:" o; do   # parse -short and --long options
 
 		[[ $o = "?" ]] && continue         # assert is a valid option
 		value="empty"
 
 		if [[ $o = "-" ]]; then            # long options filtered by hand
 			opt=${OPTARG}
-			[[ ${opt} =~ "=" ]] && value=${opt#*=} && opt=${opt%=$value}  # split
+			[[ ${opt} =~ "=" ]] && value=${opt#*=} && opt=${opt%="$value"}  # split
 			[[ -z $value ]] && value="empty"    # empty value means empty
 
 			if [[ ${largs} =~ ${opt} ]]; then   # check if long option exists
 				short=${MAP_ARGS_LONG[$opt]}    # corresponding short opt
 				long=${opt}
 			else                           # if no long option exist with this name
-				echo "Unknown option: "$opt >&2
+				echo "Unknown option: $opt" >&2
 				continue
 			fi
 		else                               # short options (already filtered)
@@ -188,7 +187,8 @@ function parse_args() {
 			[[ ${ARGS[$short]} = true ]] && value=false || value=true
 		fi
 
-		local parsed_value=$(argparse_check ${short} ${value})
+		local parsed_value
+		parsed_value=$(argparse_check "${short}" "${value}")
 		if [[ ${parsed_value} = "invalid" ]]; then
 			echo -n "Invalid value \"${value}\" for option \"-${short}\": "
 			if [[ ${ARG_TYPE[${short}]} = "enum" ]]; then
@@ -200,7 +200,6 @@ function parse_args() {
 		else
 			# assign
 			ARGS[$short]=${parsed_value}           # if we arrive here always set a value
-			[[ -n ${long} ]] && LONG_ARGS[$long]=${parsed_value}  # set long IF it exists
 		fi
 
 	done
@@ -221,8 +220,8 @@ function parse_args() {
 	fi
 
 	# Assign rest of arguments in ARGS[REST][1] ARGS[REST][2]...
-	if ! [[ $@ =~ ^[[:blank:]]*$ ]]; then
-		ARGS["REST"]=$@
+	if ! [[ $* =~ ^[[:blank:]]*$ ]]; then
+		ARGS["REST"]=$*
 		ARG_TYPE["REST"]=list
 		HELP_ARGS["REST"]="REST of arguments"
 		MANDATORY["REST"]=false
@@ -235,7 +234,7 @@ function printargs() {
 	local prefix=$1
 	for i in "${!ARGS[@]}"; do
 		local bo=" " bc=" "
-		local long="" def=""
+		local long=""
 		local printval=${ARGS[$i]}
 
 		[[ "${MANDATORY[$i]}" = false ]] && bo="[" && bc="]"
