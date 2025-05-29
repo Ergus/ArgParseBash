@@ -71,8 +71,8 @@ echo "================= Starting types =============================="
 echo -e "\n================= Starting mandatory =======================\n"
 read -p "Press [Enter] key to continue..."
 
-./test_mandatory.sh -b  || exit 1
-./test_mandatory.sh -d value  || exit 1
+./test_mandatory.sh -b  && exit 1
+./test_mandatory.sh -d value && exit 1
 
 ./test_mandatory.sh -m value  || exit 1
 ./test_mandatory.sh -b -m value  || exit 1
