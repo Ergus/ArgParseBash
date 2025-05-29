@@ -196,7 +196,7 @@ function parse_args() {
 			else
 				echo "it is not a valid \"${ARG_TYPE[${short}]}\" " >&2
 			fi
-			echo -e "\tKept value: ${ARGS[${short}]}" >&2
+			exit 1 # Abort when the parsed value was invalid
 		else
 			# assign
 			ARGS[$short]=${parsed_value}           # if we arrive here always set a value
