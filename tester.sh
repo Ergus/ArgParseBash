@@ -44,6 +44,9 @@ echo "================= Starting types =============================="
 ./test_types.sh -p /tmpp && exit 1
 ./test_types.sh -p /tmp || exit 1
 
+./test_types.sh -p /tmp -z            && exit 1
+./test_types.sh -p /tmp --unknown     && exit 1
+
 ./test_types.sh -p /tmp -a /etc/caca && exit 1
 ./test_types.sh -p /tmp -a /etc/bash.bashrc || exit 1
 
