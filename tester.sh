@@ -51,7 +51,9 @@ echo "================= Starting types =============================="
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 || exit 1
 
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f abc    && exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 3a14   && exit 1
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 5      || exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 5.     || exit 1
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 2.7171 || exit 1
 
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -e option3 && exit 1
@@ -62,6 +64,8 @@ echo "================= Starting types =============================="
 
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 00:70:00 && exit 1
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 12:34:56 || exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 34:56    || exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 99       && exit 1
 
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 6,7,89,0 || exit 1
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 8 || exit 1
