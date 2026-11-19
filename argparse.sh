@@ -59,7 +59,8 @@ function argparse_check () {
 		*) found="invalid" ;;
 	esac
 
-	echo "${found}"
+	# printf, not echo: values such as "-n" or "-e" would be taken as echo options.
+	printf '%s\n' "${found}"
 }
 
 function add_argument() {
