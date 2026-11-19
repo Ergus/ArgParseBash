@@ -156,7 +156,6 @@ function parse_args() {
 	# This function parses the command line arguments
 	# for example should be called as: parse_args "$@"
 
-	local largs=${MAP_LONG_ARGS[*]}        # create a string with all the long args
 	local OPTIND                           # local index
 	local short="" long=""
 
@@ -173,7 +172,7 @@ function parse_args() {
 			[[ ${opt} =~ "=" ]] && value=${opt#*=} && opt=${opt%="$value"}  # split
 			[[ -z $value ]] && value="empty"    # empty value means empty
 
-			if [[ ${largs} =~ ${opt} ]]; then   # check if long option exists
+			if [[ -n ${opt} && -v MAP_ARGS_LONG[$opt] ]]; then  # exact match only
 				short=${MAP_ARGS_LONG[$opt]}    # corresponding short opt
 				long=${opt}
 			else                           # if no long option exist with this name
