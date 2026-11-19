@@ -2,7 +2,7 @@
 
 # This is a simple script that emulates the most basic functionality in the
 # python's argparse library for bash. The script defines CL arguments that can
-# be accessed throw global variables.
+# be accessed through global variables.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,25 +23,23 @@
 # Requires bash >= 4.3: associative arrays (4.0) and [[ -v array[key] ]] (4.3).
 (( BASH_VERSINFO[0] * 100 + BASH_VERSINFO[1] >= 403 )) || { echo "argparse.sh: requires bash >= 4.3" >&2; return 1; }
 
-# Declare global variables, I would prefer some level of encapsulation here,
-# but there is not time now.
-
-# Internal state uses the _argparse_ prefix to avoid clashes with caller variables.
+# Global state. Public arrays are documented in README.md; internal state uses
+# the _argparse_ prefix to avoid clashes with caller variables.
 _argparse_opt_chars=""     # getopts option string
 declare -A ARGS            # associative array for argument/value
 declare -A MAP_LONG_ARGS   # associative array argument/long_argument
 declare -A MAP_ARGS_LONG   # associative array long_argument/argument
 declare -A HELP_ARGS       # associative array for argument/help_string
-declare -A MANDATORY       # list for mandatory arguments
-declare -A ARG_TYPE        # list for mandatory arguments
+declare -A MANDATORY       # short -> true if the argument must be given (no default, not bool)
+declare -A ARG_TYPE        # short -> argument type
 declare -A _ARGPARSE_ENUMS # valid values of each enum argument
 declare -A DEFAULTS        # default values; a bool flag sets the opposite of its default
 declare -a ARGS_REST=()    # remaining arguments, word boundaries preserved
 
 _ARGPARSE_VALID_TYPES="string int float bool path file enum timer list"
 
-# Arguments type tests
-# Receives the argument and the value
+# Validates VALUE against the type of argument SHORT: argparse_check SHORT VALUE.
+# Prints the converted value, or "invalid". Returns 1 only on a wrong call.
 function argparse_check () {
 	if (( $# != 2 )) || [[ -z ${ARG_TYPE[$1]} ]]; then   # Check; empty $2 is a valid value
 		echo "${FUNCNAME[0]}: internal error: invalid arguments" >&2
@@ -71,7 +69,7 @@ function argparse_check () {
 function add_argument() {
 	# This function adds command line parameters
 
-	if [[ -z $1 ]]; then   # Check
+	if [[ -z $1 ]]; then
 		echo "Usage: ${FUNCNAME[0]} -a short [-l long] [-h help] [-d default] [-t type] [-e value1,value2...]" >&2
 		return 1
 	fi
@@ -93,7 +91,7 @@ function add_argument() {
 	# getopts stops at the first non-option word; the options after it would be lost.
 	(( OPTIND > $# )) || { echo "${FUNCNAME[0]}: unexpected argument \"${!OPTIND}\"" >&2; return 1; }
 
-	if [[ -n ${arg[a]} ]]; then       # a short option is mandatory (-a before), check it
+	if [[ -n ${arg[a]} ]]; then       # a short name (-a) is required
 		# getopts accepts only single-character names; ":", "-" and "?" are special to it.
 		[[ ${arg[a]} =~ ^[a-zA-Z0-9]$ ]] || { echo "Error adding CL argument: invalid short name \"${arg[a]}\" (one letter or digit)" >&2; return 1; }
 		# "=" splits "--name=value"; a leading "-" or blanks cannot be typed as "--name".
@@ -102,7 +100,7 @@ function add_argument() {
 		[[ -n ${arg[l]} && -v MAP_ARGS_LONG[${arg[l]}] ]] && { echo "Error adding CL argument: --${arg[l]} already defined" >&2; return 1; }
 		_argparse_opt_chars+=${arg[a]}        # append option to the format
 		local def_val=""            # "" means unset; mandatory check relies on it
-		ARG_TYPE[${arg[a]}]=string  # Argument type, default string for all=
+		ARG_TYPE[${arg[a]}]=string  # default type
 		MANDATORY[${arg[a]}]=true   # Arguments mandatory by default
 
 		# Set type (default string)
@@ -122,7 +120,7 @@ function add_argument() {
 			[[ ${def_val} != "invalid" ]] || { echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"bool\"" >&2; return 1; }
 			MANDATORY[${arg[a]}]=false
 		else
-			# Sets _ARGPARSE_ENUMS[short] before testing. Needed!!
+			# argparse_check needs _ARGPARSE_ENUMS[short] to validate the default.
 			if [[ ${ARG_TYPE[${arg[a]}]} = "enum" ]]; then
 				if [[ -n ${arg[e]} ]] ; then
 					_ARGPARSE_ENUMS[${arg[a]}]=${arg[e]}
@@ -147,7 +145,7 @@ function add_argument() {
 		fi
 
 		# assign always a value (empty if not)
-		ARGS[${arg[a]}]=${def_val}              # add the vale in the array!!
+		ARGS[${arg[a]}]=${def_val}
 		DEFAULTS[${arg[a]}]=${def_val}
 
 		# the long option
@@ -156,7 +154,7 @@ function add_argument() {
 			MAP_ARGS_LONG[${arg[l]}]=${arg[a]}  # for backward search fast
 		fi
 
-		#always set a Help, at least say is empty
+		# always set a help string; the default is "No documented option"
 		HELP_ARGS[${arg[a]}]=${arg[h]}
 	else
 		echo "Error adding CL argument, no short name given" >&2
@@ -205,14 +203,14 @@ function parse_args() {
 				echo "Unknown option: --$opt" >&2
 				return 1
 			fi
-		else                               # short options (already filtered)
-			short=$o                       # set them
+		else                               # short options (validated by getopts)
+			short=$o
 			[[ ${_argparse_opt_chars} =~ ${short}":" ]] && value=$OPTARG
 
 			long=${MAP_LONG_ARGS[$o]}      # search if exists corresponding long
 		fi
 
-		# type validation here if needed
+		# A bare bool flag sets the opposite of its default.
 		if [[ ${ARG_TYPE[$short]} = "bool" && -z ${value} ]]; then  # no "=value" given
 			[[ ${DEFAULTS[$short]} = true ]] && value=false || value=true
 		fi
