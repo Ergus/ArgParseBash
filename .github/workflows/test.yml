@@ -1,17 +1,12 @@
-name: Test on Linux
+name: Build and Test on Linux and Windows
 
 on:
   push:
     branches: [ master ]
-    tags: [ "v*" ]
-  pull_request:
-  workflow_dispatch:
-
-permissions:
-  contents: read
+    tags: "v*"
 
 jobs:
-  test:
+  build:
     name: Test on ${{ matrix.config.os }}
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 1
@@ -25,11 +20,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Info
-        env:
-          REF: ${{ github.ref }}
-        run: |
-          echo "$REF"
-          bash --version | head -n 1
+        run: echo ${{ github.ref }}
 
       - name: Run Tester
         run: ./tester.sh
