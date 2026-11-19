@@ -33,6 +33,7 @@ declare -A HELP_ARGS       # associative array for argument/help_string
 declare -A MANDATORY       # list for mandatory arguments
 declare -A ARG_TYPE        # list for mandatory arguments
 declare -A ENUMS           # list of valid parameters for lists
+declare -a ARGS_REST=()    # remaining arguments, word boundaries preserved
 
 VALID_TYPES="string int float bool path file enum timer list"
 
@@ -234,7 +235,8 @@ function parse_args() {
 		exit 1
 	fi
 
-	# Assign rest of arguments in ARGS[REST][1] ARGS[REST][2]...
+	# ARGS[REST] joins words with spaces (kept for compatibility); ARGS_REST keeps them intact.
+	ARGS_REST=("$@")
 	if ! [[ $* =~ ^[[:blank:]]*$ ]]; then
 		ARGS["REST"]=$*
 		ARG_TYPE["REST"]=list
