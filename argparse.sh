@@ -23,7 +23,6 @@
 # Declare global variables, I would prefer some level of encapsulation here,
 # but there is not time now.
 
-set -e
 nargs=0                    # number of total arguments (unused now)
 opt_chars=""               # chain to parse
 declare -A ARGS            # associative array for argument/value
@@ -43,7 +42,7 @@ VALID_TYPES="string int float bool path file enum timer list"
 function argparse_check () {
 	if (( $# != 2 )) || [[ -z ${ARG_TYPE[$1]} ]]; then   # Check; empty $2 is a valid value
 		echo "Error using $0 function" >&2
-		exit 1
+		return 1
 	fi
 	local type=${ARG_TYPE[$1]}
 	local value=$2
@@ -71,7 +70,7 @@ function add_argument() {
 
 	if [[ -z $1 ]]; then   # Check
 		echo "Usage $0 -a argname -l longname -h helstring -d defaultvalue" >&2
-		exit 1
+		return 1
 	fi
 
 	local OPTIND # to save the index locally
@@ -84,20 +83,20 @@ function add_argument() {
 			d) arg[d]=${OPTARG} ;;  # default value
 			t) arg[t]=${OPTARG} ;;  # expected type
 			e) arg[e]=${OPTARG} ;;  # enum (if -t enum)
-			:) echo "${FUNCNAME[0]}: option -${OPTARG} requires a value" >&2; exit 1 ;;
-			*) echo "${FUNCNAME[0]}: unknown option -${OPTARG}" >&2; exit 1 ;;
+			:) echo "${FUNCNAME[0]}: option -${OPTARG} requires a value" >&2; return 1 ;;
+			*) echo "${FUNCNAME[0]}: unknown option -${OPTARG}" >&2; return 1 ;;
 		esac
 	done
 	# getopts stops at the first non-option word; the options after it would be lost.
-	(( OPTIND > $# )) || { echo "${FUNCNAME[0]}: unexpected argument \"${!OPTIND}\"" >&2; exit 1; }
+	(( OPTIND > $# )) || { echo "${FUNCNAME[0]}: unexpected argument \"${!OPTIND}\"" >&2; return 1; }
 
 	if [[ -n ${arg[a]} ]]; then       # a short option is mandatory (-a before), check it
 		# getopts accepts only single-character names; ":", "-" and "?" are special to it.
-		[[ ${arg[a]} =~ ^[a-zA-Z0-9]$ ]] || { echo "Error adding CL argument: invalid short name \"${arg[a]}\" (one letter or digit)" >&2; exit 1; }
+		[[ ${arg[a]} =~ ^[a-zA-Z0-9]$ ]] || { echo "Error adding CL argument: invalid short name \"${arg[a]}\" (one letter or digit)" >&2; return 1; }
 		# "=" splits "--name=value"; a leading "-" or blanks cannot be typed as "--name".
-		[[ -z ${arg[l]} || ${arg[l]} =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ ]] || { echo "Error adding CL argument: invalid long name \"${arg[l]}\" (letters, digits, '_' or '-')" >&2; exit 1; }
-		[[ -v ARG_TYPE[${arg[a]}] ]] && { echo "Error adding CL argument: -${arg[a]} already defined" >&2; exit 1; }
-		[[ -n ${arg[l]} && -v MAP_ARGS_LONG[${arg[l]}] ]] && { echo "Error adding CL argument: --${arg[l]} already defined" >&2; exit 1; }
+		[[ -z ${arg[l]} || ${arg[l]} =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ ]] || { echo "Error adding CL argument: invalid long name \"${arg[l]}\" (letters, digits, '_' or '-')" >&2; return 1; }
+		[[ -v ARG_TYPE[${arg[a]}] ]] && { echo "Error adding CL argument: -${arg[a]} already defined" >&2; return 1; }
+		[[ -n ${arg[l]} && -v MAP_ARGS_LONG[${arg[l]}] ]] && { echo "Error adding CL argument: --${arg[l]} already defined" >&2; return 1; }
 		opt_chars+=${arg[a]}        # append option to the format
 		local def_val=""            # "" means unset; mandatory check relies on it
 		ARG_TYPE[${arg[a]}]=string  # Argument type, default string for all=
@@ -109,15 +108,15 @@ function add_argument() {
 				ARG_TYPE[${arg[a]}]=${arg[t]}
 			else
 				echo "${arg[t]} is not a valid type" >&2
-				exit 1
+				return 1
 			fi
 		fi
 
 		# Default values (default empty, false for bool)
 		if [[ ${ARG_TYPE[${arg[a]}]} = "bool" ]]; then
 			# bool values never mandatory, only true or false
-			def_val=$(argparse_check "${arg[a]}" "${arg[d]:-false}")
-			[[ ${def_val} != "invalid" ]] || { echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"bool\"" >&2; exit 1; }
+			def_val=$(argparse_check "${arg[a]}" "${arg[d]:-false}") || return 1
+			[[ ${def_val} != "invalid" ]] || { echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"bool\"" >&2; return 1; }
 			MANDATORY[${arg[a]}]=false
 		else
 			# Sets ENUMS[short] before testing. Needed!!
@@ -126,18 +125,18 @@ function add_argument() {
 					ENUMS[${arg[a]}]=${arg[e]}
 				else
 					echo "Enum requires -e option" >&2
-					exit 1
+					return 1
 				fi
 			fi
 			# if default value provided use it else it is mandatory
 			opt_chars+=":"
 			if [[ -n ${arg[d]} ]]; then
 				local default_value
-				default_value=$(argparse_check "${arg[a]}" "${arg[d]}")
+				default_value=$(argparse_check "${arg[a]}" "${arg[d]}") || return 1
 				if [[ ${default_value} = "invalid" ]]; then
 					echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\" " >&2
 					echo "This is an error in the script"
-					exit 1
+					return 1
 				else
 					def_val=${default_value}
 					MANDATORY[${arg[a]}]=false
@@ -159,7 +158,7 @@ function add_argument() {
 		HELP_ARGS[${arg[a]}]=${arg[h]}
 	else
 		echo "Error adding CL argument, no short name given" >&2
-		exit 1
+		return 1
 	fi
 
 	((nargs+=1))  # Counter (unused now)
@@ -181,9 +180,9 @@ function parse_args() {
 
 		if [[ $o = "?" ]]; then
 			echo "Unknown option: -${OPTARG}" >&2
-			exit 1
+			return 1
 		fi
-		[[ $o = ":" ]] && { echo "Option -${OPTARG} requires a value" >&2; exit 1; }
+		[[ $o = ":" ]] && { echo "Option -${OPTARG} requires a value" >&2; return 1; }
 		value=""
 
 		if [[ $o = "-" ]]; then            # long options filtered by hand
@@ -197,14 +196,14 @@ function parse_args() {
 				if [[ ${OPTARG} != *=* && ${ARG_TYPE[$short]} != "bool" ]]; then
 					if (( OPTIND > $# )); then
 						echo "Option --$opt requires a value" >&2
-						exit 1
+						return 1
 					fi
 					value=${!OPTIND}
 					((OPTIND+=1))
 				fi
 			else                           # if no long option exist with this name
 				echo "Unknown option: --$opt" >&2
-				exit 1
+				return 1
 			fi
 		else                               # short options (already filtered)
 			short=$o                       # set them
@@ -219,7 +218,7 @@ function parse_args() {
 		fi
 
 		local parsed_value
-		parsed_value=$(argparse_check "${short}" "${value}")
+		parsed_value=$(argparse_check "${short}" "${value}") || return 1
 		if [[ ${parsed_value} = "invalid" ]]; then
 			{
 				echo -n "Invalid value \"${value}\" for option \"-${short}\": "
@@ -229,7 +228,7 @@ function parse_args() {
 					echo -e "it is not a valid \"${ARG_TYPE[${short}]}\" "
 				fi
 			} >&2
-			exit 1 # Abort when the parsed value was invalid
+			return 1 # Fail when the parsed value was invalid
 		else
 			# assign
 			ARGS[$short]=${parsed_value}           # if we arrive here always set a value
@@ -249,7 +248,7 @@ function parse_args() {
 
 	if (( invalid > 0 )) ; then
 		echo "Error: ${invalid} mandatory command line arguments missing" >&2
-		exit 1
+		return 1
 	fi
 
 	# ARGS[REST] joins words with spaces (kept for compatibility); ARGS_REST keeps them intact.

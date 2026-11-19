@@ -42,14 +42,14 @@ echo "Command: $0 $@"
 
 source argparse.sh
 
-add_argument -a b -l bool -h "Boolean default false" -t bool
-add_argument -a m -l mandatory -h "Mandatory argument"
-add_argument -a d -l default -h "Default argument" -d "defvalue"
+add_argument -a b -l bool -h "Boolean default false" -t bool || exit 1
+add_argument -a m -l mandatory -h "Mandatory argument" || exit 1
+add_argument -a d -l default -h "Default argument" -d "defvalue" || exit 1
 
 echo -e "\n Before (default)"
 printargs
 
-parse_args "$@"
+parse_args "$@" || exit 1
 
 echo -e "\n After (parsed)"
 printargs

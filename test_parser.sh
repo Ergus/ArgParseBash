@@ -43,17 +43,17 @@ echo "Command: $0 $@"
 
 source argparse.sh
 
-add_argument -a h -l help -h "Funcion help" -t bool
-add_argument -a t -l trueo -h "Funcion help" -t bool -d true
-add_argument -a p -l print -h "Funcion print" -d 0
-add_argument -a l -l loops -h "Number of loops" -d 10
-add_argument -a o -l other
+add_argument -a h -l help -h "Funcion help" -t bool || exit 1
+add_argument -a t -l trueo -h "Funcion help" -t bool -d true || exit 1
+add_argument -a p -l print -h "Funcion print" -d 0 || exit 1
+add_argument -a l -l loops -h "Number of loops" -d 10 || exit 1
+add_argument -a o -l other || exit 1
 
 
 echo -e "\n Before"
 printargs
 
-parse_args "$@"
+parse_args "$@" || exit 1
 echo -e "\n After"
 
 printargs

@@ -9,7 +9,14 @@ and short names. For the usage, please, see the test examples scripts.
 [test_types.sh](test_types.sh)
 
 
-There are 4 functions:
+There are 4 functions. On error, `add_argument` and `parse_args` print
+a message on stderr and return 1; they never exit. The caller decides
+how to handle the failure, for example:
+
+```
+add_argument -a i -l int -t int -d 1 || exit 1
+parse_args "$@" || exit 1
+```
 
 + **add_argument**: to add comman line options.
 
@@ -37,7 +44,7 @@ There are 4 functions:
 + **parse_args**: to parse the command line arguments or any list
 
 	This one can be called passing any list of arguments to process
-	for example: `parse_args "$@"`
+	for example: `parse_args "$@" || exit 1`
 
 	At the end of this function it checks that the mandatory arguments
     have a non-empty value.
