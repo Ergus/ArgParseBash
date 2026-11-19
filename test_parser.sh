@@ -59,4 +59,3 @@ echo -e "\n After"
 printargs
 
 echo "Number of loops: "${ARGS[l]}
-echo "Print value: "${LONG_ARGS[print]}
