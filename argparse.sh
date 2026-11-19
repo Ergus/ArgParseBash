@@ -158,10 +158,15 @@ function parse_args() {
 	# This function parses the command line arguments
 	# for example should be called as: parse_args "$@"
 
-	local OPTIND                           # local index
+	local OPTIND=1                         # local index
 	local short="" long=""
+	local rest=()
 
-	while getopts ":${opt_chars}-:" o; do  # parse -short and --long options
+	# getopts stops at "--" and at the first non-option: "--" ends parsing,
+	# a non-option goes to rest and parsing resumes after it.
+	while (( OPTIND <= $# )); do
+		[[ ${!OPTIND} = "--" ]] && { rest+=("${@:OPTIND+1}"); break; }
+		getopts ":${opt_chars}-:" o || { rest+=("${!OPTIND}"); ((OPTIND+=1)); continue; }
 
 		if [[ $o = "?" ]]; then
 			echo "Unknown option: -${OPTARG}" >&2
@@ -219,7 +224,7 @@ function parse_args() {
 		fi
 
 	done
-	shift $((OPTIND-1))
+	set -- "${rest[@]}"
 
 	# Check mandatory arguments after all parse
 	local invalid=0

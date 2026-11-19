@@ -121,8 +121,10 @@ false. If you want to use a boolean variable that accepts `true` or
 add_argument -a b -l mybool -h "Bool option with input" -t enum -e true,false -d false
 ```
 
-An extra **REST** argument is automatically added when some extra
-command line arguments are added at the end of the input. This can be
+An extra **REST** argument is automatically added when the input
+contains arguments that are not options. These may appear before,
+between or after the options; `--` ends option parsing and makes every
+following argument a REST argument. This can be
 accessed like: `ARGS[REST]` and in spite of it is not a list, it is
 iterable or can be passed to other commands. Ex: `echo ${ARGS[REST]} |
 wc -w` returns the number of elements (words) in the list.
