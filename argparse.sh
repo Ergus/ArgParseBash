@@ -53,7 +53,8 @@ function argparse_check () {
 		bool) [[ $value =~ (^true$|^false$) ]] && found=${BASH_REMATCH[1]} ;;
 		path) [[ -d $value ]] && found=$value ;;
 		file) [[ -f $value ]] && found=$value ;;
-		enum) [[ $value =~ (^${ENUMS[$1]//,/'$|^'}$) ]] && found=${BASH_REMATCH[1]} ;;
+		# Literal match: quoted pattern parts disable glob/regex metacharacters in values.
+		enum) [[ $value != *,* && ",${ENUMS[$1]}," == *",${value},"* ]] && found=$value ;;
 		timer) [[ $value =~ (^([0-9]+:)?[0-5][0-9]:[0-5][0-9]$) ]] && found=${BASH_REMATCH[1]} ;;
 		list) [[ $value =~ ^(([0-9]+,)+?[0-9]+)$ ]] && found=${BASH_REMATCH[1]//,/ } ;;
 		*) found="invalid" ;;
