@@ -167,6 +167,8 @@ B() { add_argument -a t -l tr -t bool -d true; add_argument -a n -l no -t bool; 
 # Invalid add_argument options abort.
 ( add_argument -a s -x 1 -d y ) && exit 1
 ( add_argument -a s -d )        && exit 1
+( add_argument -a s foo -d y )  2>&1 | grep -q 'add_argument: unexpected argument "foo"' || exit 1
+( add_argument -a s -d y foo )  2>&1 | grep -q 'add_argument: unexpected argument "foo"' || exit 1
 
 # Short names are one ASCII letter or digit.
 ( add_argument -a 7 -d y ) || exit 1

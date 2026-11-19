@@ -88,6 +88,8 @@ function add_argument() {
 			*) echo "${FUNCNAME[0]}: unknown option -${OPTARG}" >&2; exit 1 ;;
 		esac
 	done
+	# getopts stops at the first non-option word; the options after it would be lost.
+	(( OPTIND > $# )) || { echo "${FUNCNAME[0]}: unexpected argument \"${!OPTIND}\"" >&2; exit 1; }
 
 	if [[ -n ${arg[a]} ]]; then       # a short option is mandatory (-a before), check it
 		# getopts accepts only single-character names; ":", "-" and "?" are special to it.
