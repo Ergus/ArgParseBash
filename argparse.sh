@@ -20,6 +20,9 @@
 # email: kratsbinovish@gmail.com
 # date: 06/03/2018
 
+# Requires bash >= 4.3: associative arrays (4.0) and [[ -v array[key] ]] (4.3).
+(( BASH_VERSINFO[0] * 100 + BASH_VERSINFO[1] >= 403 )) || { echo "argparse.sh: requires bash >= 4.3" >&2; return 1; }
+
 # Declare global variables, I would prefer some level of encapsulation here,
 # but there is not time now.
 
