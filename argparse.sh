@@ -39,7 +39,7 @@ VALID_TYPES="string int float bool path file enum timer list"
 # Arguments type tests
 # Receives the argument and the value
 function argparse_check () {
-	if [[ -z $2 ]] || [[ -z ${ARG_TYPE[$1]} ]]; then   # Check
+	if (( $# != 2 )) || [[ -z ${ARG_TYPE[$1]} ]]; then   # Check; empty $2 is a valid value
 		echo "Error using $0 function" >&2
 		exit 1
 	fi
@@ -87,7 +87,7 @@ function add_argument() {
 
 	if [[ -n ${arg[a]} ]]; then       # a short option is mandatory (-a before), check it
 		opt_chars+=${arg[a]}        # append option to the format
-		local def_val="empty"       # default is always false
+		local def_val=""            # "" means unset; mandatory check relies on it
 		ARG_TYPE[${arg[a]}]=string  # Argument type, default string for all=
 		MANDATORY[${arg[a]}]=true   # Arguments mandatory by default
 
@@ -165,16 +165,19 @@ function parse_args() {
 			echo "Unknown option: -${OPTARG}" >&2
 			exit 1
 		fi
-		value="empty"
+		value=""
 
 		if [[ $o = "-" ]]; then            # long options filtered by hand
 			opt=${OPTARG}
 			[[ ${opt} =~ "=" ]] && value=${opt#*=} && opt=${opt%="$value"}  # split
-			[[ -z $value ]] && value="empty"    # empty value means empty
 
 			if [[ -n ${opt} && -v MAP_ARGS_LONG[$opt] ]]; then  # exact match only
 				short=${MAP_ARGS_LONG[$opt]}    # corresponding short opt
 				long=${opt}
+				if [[ ${OPTARG} != *=* && ${ARG_TYPE[$short]} != "bool" ]]; then
+					echo "Option --$opt requires a value: --$opt=VALUE" >&2
+					exit 1
+				fi
 			else                           # if no long option exist with this name
 				echo "Unknown option: --$opt" >&2
 				exit 1
@@ -214,7 +217,7 @@ function parse_args() {
 	# Check mandatory arguments after all parse
 	local invalid=0
 	for i in "${!MANDATORY[@]}"; do
-		if [[ ${ARGS[$i]} = empty ]] && [[ ${MANDATORY[$i]} = true ]]; then
+		if [[ -z ${ARGS[$i]} ]] && [[ ${MANDATORY[$i]} = true ]]; then
 			echo "Argument: -$i|--${MAP_LONG_ARGS[$i]}: ${HELP_ARGS[$i]}. is mandatory!!" >&2
 			((invalid+=1))
 		fi
