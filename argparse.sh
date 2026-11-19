@@ -219,11 +219,11 @@ function parse_args() {
 		parsed_value=$(argparse_check "${short}" "${value}") || return 1
 		if [[ ${parsed_value} = "invalid" ]]; then
 			{
-				echo -n "Invalid value \"${value}\" for option \"-${short}\": "
+				printf 'Invalid value "%s" for option "-%s": ' "${value}" "${short}"
 				if [[ ${ARG_TYPE[${short}]} = "enum" ]]; then
-					echo -e "valid values are: [${_ARGPARSE_ENUMS[${short}]}]"
+					printf 'valid values are: [%s]\n' "${_ARGPARSE_ENUMS[${short}]}"
 				else
-					echo -e "it is not a valid \"${ARG_TYPE[${short}]}\" "
+					printf 'it is not a valid "%s" \n' "${ARG_TYPE[${short}]}"
 				fi
 			} >&2
 			return 1 # Fail when the parsed value was invalid
@@ -275,7 +275,8 @@ function printargs() {
 
 		[[ ${ARG_TYPE[$i]} = list ]] && printval=\[${printval// /,}\] # Reformat list.
 
-		echo -e "${prefix}arg: ${short}${long}: (${ARG_TYPE[$i]}:${printval}) ${HELP_ARGS[$i]} "
+		# printf: help strings and values are printed verbatim, without backslash escapes.
+		printf '%sarg: %s%s: (%s:%s) %s \n' "${prefix}" "${short}" "${long}" "${ARG_TYPE[$i]}" "${printval}" "${HELP_ARGS[$i]}"
 
 	done
 }

@@ -107,6 +107,10 @@ B() { add_argument -a t -l tr -t bool -d true && add_argument -a n -l no -t bool
 # Caller variables with common names do not affect the parser.
 ( S && E -e a,b -d a && opt_chars= && VALID_TYPES= && ENUMS=() && nargs=x && parse_args -s y -e b && [[ ${ARGS[s]} = y && ${ARGS[e]} = b ]] ) || exit 1
 
+# Help strings, values and enum lists are printed verbatim.
+( add_argument -a s -h 'a\tb\n%s' -d 'c\td' && printargs ) | grep -qF '(string:c\td) a\tb\n%s' || exit 1
+( E -e 'a\tb,c' -d c && parse_args -e x ) 2>&1 | grep -qF 'valid values are: [a\tb,c]' || exit 1
+
 # Errors return 1 to the caller instead of exiting.
 ( add_argument                        ; echo "rc=$?" ) 2>/dev/null | grep -qx rc=1 || exit 1
 ( add_argument -a s -d                ; echo "rc=$?" ) 2>/dev/null | grep -qx rc=1 || exit 1
