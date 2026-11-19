@@ -75,7 +75,7 @@ function add_argument() {
 
 	local OPTIND # to save the index locally
 	declare -A arg=([h]="No documented option")
-	while getopts "a:l:h:d:t:e:" o; do # Read the function arguments -a mandatory
+	while getopts ":a:l:h:d:t:e:" o; do # Read the function arguments -a mandatory
 		case $o in
 			a) arg[a]=${OPTARG} ;;  # argument
 			l) arg[l]=${OPTARG} ;;  # long argument
@@ -83,7 +83,8 @@ function add_argument() {
 			d) arg[d]=${OPTARG} ;;  # default value
 			t) arg[t]=${OPTARG} ;;  # expected type
 			e) arg[e]=${OPTARG} ;;  # enum (if -t enum)
-			*) echo "Unknown option $o" >&2
+			:) echo "${FUNCNAME[0]}: option -${OPTARG} requires a value" >&2; exit 1 ;;
+			*) echo "${FUNCNAME[0]}: unknown option -${OPTARG}" >&2; exit 1 ;;
 		esac
 	done
 
