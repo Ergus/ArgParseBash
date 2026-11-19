@@ -174,6 +174,15 @@ for name in ab : - '?' '*' . ' ' é; do
 	( add_argument -a "$name" -d y ) && exit 1
 done
 
+# Long names are letters, digits, "_" or "-", not starting with "-".
+( add_argument -a s -l my-long_2 -d x; parse_args --my-long_2=y; [[ ${ARGS[s]} = y ]] ) || exit 1
+( add_argument -a s -l a=b    -d y ) 2>&1 | grep -q 'invalid long name' || exit 1
+( add_argument -a s -l -x     -d y ) 2>&1 | grep -q 'invalid long name' || exit 1
+( add_argument -a s -l 'a b'  -d y ) 2>&1 | grep -q 'invalid long name' || exit 1
+( add_argument -a s -l ' '    -d y ) 2>&1 | grep -q 'invalid long name' || exit 1
+( add_argument -a s -l é      -d y ) 2>&1 | grep -q 'invalid long name' || exit 1
+( add_argument -a s -l '*'    -d y ) 2>&1 | grep -q 'invalid long name' || exit 1
+
 # Bool flags set the opposite of the default; no toggling back.
 ( B; parse_args -t -t -n -n; [[ ${ARGS[t]} = false && ${ARGS[n]} = true ]] ) || exit 1
 ( B; parse_args -tt;         [[ ${ARGS[t]} = false ]] ) || exit 1

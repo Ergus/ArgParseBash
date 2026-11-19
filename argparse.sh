@@ -92,6 +92,8 @@ function add_argument() {
 	if [[ -n ${arg[a]} ]]; then       # a short option is mandatory (-a before), check it
 		# getopts accepts only single-character names; ":", "-" and "?" are special to it.
 		[[ ${arg[a]} =~ ^[a-zA-Z0-9]$ ]] || { echo "Error adding CL argument: invalid short name \"${arg[a]}\" (one letter or digit)" >&2; exit 1; }
+		# "=" splits "--name=value"; a leading "-" or blanks cannot be typed as "--name".
+		[[ -z ${arg[l]} || ${arg[l]} =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ ]] || { echo "Error adding CL argument: invalid long name \"${arg[l]}\" (letters, digits, '_' or '-')" >&2; exit 1; }
 		[[ -v ARG_TYPE[${arg[a]}] ]] && { echo "Error adding CL argument: -${arg[a]} already defined" >&2; exit 1; }
 		[[ -n ${arg[l]} && -v MAP_ARGS_LONG[${arg[l]}] ]] && { echo "Error adding CL argument: --${arg[l]} already defined" >&2; exit 1; }
 		opt_chars+=${arg[a]}        # append option to the format
