@@ -2,14 +2,14 @@ README
 ======
 
 This is a simple script and a test-program that emulates the argparse
-python-like functionality in bash.
+python-like functionality in bash. It requires bash 4.3 or newer.
 
 You can call the script with the options specified using the long
 and short names. For the usage, please, see the test examples scripts.
 [test_types.sh](test_types.sh)
 
 
-There are 4 functions. On error, `add_argument` and `parse_args` print
+There are 3 public functions and 1 internal function. On error, `add_argument` and `parse_args` print
 a message on stderr and return 1; they never exit. The caller decides
 how to handle the failure, for example:
 
@@ -18,19 +18,19 @@ add_argument -a i -l int -t int -d 1 || exit 1
 parse_args "$@" || exit 1
 ```
 
-+ **add_argument**: to add comman line options.
++ **add_argument**: to add command line options.
 
-	The command line arguments can be defined with 5 options:
+	The command line arguments can be defined with 6 options:
 
 	- **-a** short name for argument [mandatory]
 
 	- **-l** long name for argument [optional default: ""]
 
-	- **-d** default value [else, the argument becomes mandatory]. The
-      default value is checked to assert they follow a valid regex to
-      convert to the type.
+	- **-d** default value [else, the argument becomes mandatory; bool
+      arguments are never mandatory]. The default value is checked
+      against the regex of the type.
 
-	- **-h** docstring [optional default: "Not documented"]
+	- **-h** docstring [optional default: "No documented option"]
 
 	- **-t** Type of the parameters (string int float bool path file enum
       timer list) [optional default: string]
@@ -49,8 +49,7 @@ parse_args "$@" || exit 1
 	At the end of this function it checks that the mandatory arguments
     have a non-empty value.
 
-	Every value is checked to assert they match a regex valid for
-    their type.
+	Every value is checked against the regex of its type.
 
 + **printargs**: prints the arguments defined in the script and the
   values.
@@ -59,7 +58,7 @@ parse_args "$@" || exit 1
     receive a parameter to add as a prefix before every printed line;
     this is useful to add comments before the printed lines:
 
-	Example: `printargs #`
+	Example: `printargs "# "`
 
 + **argparse_check**: checks the values to match the parameter
   types. This is an internal function and the user shouldn't need to
@@ -72,46 +71,41 @@ parse_args "$@" || exit 1
 
 	In case of **float** it accepts formats like `3.14` or `3.`
 
-	In case of **enum** if checks that the enum is one of the valid options.
+	In case of **enum** it checks that the value is one of the valid options.
 
-	In case of **timer** the expected format is `H+:mm:ss`. `mm` and
-    `ss` are limited to 00 -> 60. But `H+` means any valid positive
-    integer.
+	In case of **timer** the expected format is `[H+:]mm:ss`. `mm` and
+    `ss` are limited to 00 -> 59. The optional `H+` means any
+    non-negative integer.
 
-	All the strings are valid but it is assumed that they don't
-    contain spaces.
+	All the strings are valid.
 
-	In case of **list** currently the valid values are only integers
-    and are set like `"1,2,34,56"` (quotes not required.)
+	In case of **list** currently the valid values are only non-negative
+    integers and are set like `"1,2,34,56"` (quotes not required). The
+    value is stored space-separated: `"1 2 34 56"`.
 
 Accessing parameters
 --------------------
 
-The values can be accessed throw the global arrays created as
-`ARGS[short]` or `LONG_ARGS[long]`.
+The values can be accessed through the global array `ARGS[short]`. To
+access a value by its long name use `${ARGS[${MAP_ARGS_LONG[long]}]}`.
 
 The help can be accessed as `HELP_ARGS[short]`.
 
-There are names restrictions for the script variables as all the
-variables in bash are public by default. Also, for simplicity, please
-read the script.
-
-These names are forbidden because we use them internally, and they are
-public variables.
+All bash variables are global by default, so the script must not use
+the following names. They are public and used by argparse.sh. Internal
+names start with `_argparse_` or `_ARGPARSE_`.
 
 + **ARGS**: associative array with the values, index *short* name. Ex: `${ARGS[e]}`
 
-+ **LONG_ARGS**: associative array with the values, index *long* name. Ex: `${LONG_ARGS[myenum]}`
-
 + **MAP_LONG_ARGS**: Map from *short* to *long* names. Usually not needed by the user.
 
-+ **MAP_ARGS_LONG**: Map from *long* to *short* names.  Usually not needed by the user
++ **MAP_ARGS_LONG**: Map from *long* to *short* names. Usually not needed by the user.
 
 + **HELP_ARGS**: Help string arrays. Index *short*.
 
-+ **MANDATORY**: Array that returns is the argument is mandatory
++ **MANDATORY**: `true` if the argument is mandatory. Index *short*.
 
-+ **ARG_TYPE**: Array that returns the argument type
++ **ARG_TYPE**: Argument type. Index *short*.
 
 + **DEFAULTS**: Default values. Index *short*.
 
@@ -128,7 +122,7 @@ An extra **REST** argument is automatically added when the input
 contains arguments that are not options. These may appear before,
 between or after the options; `--` ends option parsing and makes every
 following argument a REST argument. This can be
-accessed like: `ARGS[REST]` and in spite of it is not a list, it is
+accessed like: `ARGS[REST]`; it is a string, not an array, but it is
 iterable or can be passed to other commands. Ex: `echo ${ARGS[REST]} |
 wc -w` returns the number of elements (words) in the list.
 
