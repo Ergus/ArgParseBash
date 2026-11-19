@@ -104,7 +104,8 @@ function add_argument() {
 		# Default values (default empty, false for bool)
 		if [[ ${ARG_TYPE[${arg[a]}]} = "bool" ]]; then
 			# bool values never mandatory, only true or false
-			[[ -n ${arg[d]} ]] && def_val=true || def_val=false
+			def_val=$(argparse_check "${arg[a]}" "${arg[d]:-false}")
+			[[ ${def_val} != "invalid" ]] || { echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"bool\"" >&2; exit 1; }
 			MANDATORY[${arg[a]}]=false
 		else
 			# Sets ENUMS[short] before testing. Needed!!
