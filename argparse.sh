@@ -158,9 +158,12 @@ function parse_args() {
 	local OPTIND                           # local index
 	local short="" long=""
 
-	while getopts "${opt_chars}-:" o; do   # parse -short and --long options
+	while getopts ":${opt_chars}-:" o; do  # parse -short and --long options
 
-		[[ $o = "?" ]] && continue         # assert is a valid option
+		if [[ $o = "?" ]]; then
+			echo "Unknown option: -${OPTARG}" >&2
+			exit 1
+		fi
 		value="empty"
 
 		if [[ $o = "-" ]]; then            # long options filtered by hand
@@ -172,8 +175,8 @@ function parse_args() {
 				short=${MAP_ARGS_LONG[$opt]}    # corresponding short opt
 				long=${opt}
 			else                           # if no long option exist with this name
-				echo "Unknown option: $opt" >&2
-				continue
+				echo "Unknown option: --$opt" >&2
+				exit 1
 			fi
 		else                               # short options (already filtered)
 			short=$o                       # set them
