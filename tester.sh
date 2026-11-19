@@ -135,6 +135,8 @@ B() { add_argument -a t -l tr -t bool -d true; add_argument -a n -l no -t bool; 
 ( S; parse_args --str 'b c';  [[ ${ARGS[s]} = 'b c' ]] ) || exit 1
 ( S; parse_args --str '';     [[ -z ${ARGS[s]} ]] )    || exit 1
 ( S; parse_args --str )       && exit 1
+( S; parse_args -s )          2>&1 | grep -q 'Option -s requires a value' || exit 1
+( S; I; parse_args -i 2 -s ) 2>&1 | grep -q 'Option -s requires a value' || exit 1
 
 # Enum values are literal.
 ( E -e a.c,b -d b;     parse_args -e a.c; [[ ${ARGS[e]} = a.c ]] ) || exit 1

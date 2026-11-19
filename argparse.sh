@@ -179,6 +179,7 @@ function parse_args() {
 			echo "Unknown option: -${OPTARG}" >&2
 			exit 1
 		fi
+		[[ $o = ":" ]] && { echo "Option -${OPTARG} requires a value" >&2; exit 1; }
 		value=""
 
 		if [[ $o = "-" ]]; then            # long options filtered by hand
