@@ -1,0 +1,27 @@
+name: Build and Test on Linux Mac and Windows
+
+on:
+  push:
+    branches: [ master ]
+    tags: "v*"
+
+jobs:
+  build:
+    name: Test on ${{ matrix.config.os }}
+    runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {os: ubuntu-latest}
+        - {os: macos-latest}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Info
+        run: echo ${{ github.ref }}
+
+      - name: Run Tester
+        run: ./tester.sh
