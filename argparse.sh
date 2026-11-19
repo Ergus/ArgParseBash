@@ -88,6 +88,8 @@ function add_argument() {
 	done
 
 	if [[ -n ${arg[a]} ]]; then       # a short option is mandatory (-a before), check it
+		[[ -v ARG_TYPE[${arg[a]}] ]] && { echo "Error adding CL argument: -${arg[a]} already defined" >&2; exit 1; }
+		[[ -n ${arg[l]} && -v MAP_ARGS_LONG[${arg[l]}] ]] && { echo "Error adding CL argument: --${arg[l]} already defined" >&2; exit 1; }
 		opt_chars+=${arg[a]}        # append option to the format
 		local def_val=""            # "" means unset; mandatory check relies on it
 		ARG_TYPE[${arg[a]}]=string  # Argument type, default string for all=
