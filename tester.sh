@@ -111,6 +111,14 @@ B() { add_argument -a t -l tr -t bool -d true && add_argument -a n -l no -t bool
 ( add_argument -a s -h 'a\tb\n%s' -d 'c\td' && printargs ) | grep -qF '(string:c\td) a\tb\n%s' || exit 1
 ( E -e 'a\tb,c' -d c && parse_args -e x ) 2>&1 | grep -qF 'valid values are: [a\tb,c]' || exit 1
 
+# Error messages name the function, go to stderr only, and omit undefined long names.
+( add_argument )                           2>&1 | grep -q '^Usage: add_argument -a short' || exit 1
+( add_argument -a i -t int -d x )          2>&1 >/dev/null | grep -qx 'Default value "x" for "i" is not "int"' || exit 1
+[[ -z $( add_argument -a i -t int -d x 2>/dev/null ) ]] || exit 1
+( add_argument -a n && parse_args )        2>&1 | grep -qx 'Argument -n is mandatory: No documented option' || exit 1
+( M && parse_args )                        2>&1 | grep -qx 'Argument -m|--mand is mandatory: No documented option' || exit 1
+( S && ARG_TYPE[s]= && parse_args -s y )   2>&1 | grep -q '^argparse_check: internal error' || exit 1
+
 # Errors return 1 to the caller instead of exiting.
 ( add_argument                        ; echo "rc=$?" ) 2>/dev/null | grep -qx rc=1 || exit 1
 ( add_argument -a s -d                ; echo "rc=$?" ) 2>/dev/null | grep -qx rc=1 || exit 1

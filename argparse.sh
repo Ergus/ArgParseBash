@@ -41,7 +41,7 @@ _ARGPARSE_VALID_TYPES="string int float bool path file enum timer list"
 # Receives the argument and the value
 function argparse_check () {
 	if (( $# != 2 )) || [[ -z ${ARG_TYPE[$1]} ]]; then   # Check; empty $2 is a valid value
-		echo "Error using $0 function" >&2
+		echo "${FUNCNAME[0]}: internal error: invalid arguments" >&2
 		return 1
 	fi
 	local type=${ARG_TYPE[$1]}
@@ -69,7 +69,7 @@ function add_argument() {
 	# This function adds command line parameters
 
 	if [[ -z $1 ]]; then   # Check
-		echo "Usage $0 -a argname -l longname -h helstring -d defaultvalue" >&2
+		echo "Usage: ${FUNCNAME[0]} -a short [-l long] [-h help] [-d default] [-t type] [-e value1,value2...]" >&2
 		return 1
 	fi
 
@@ -134,8 +134,7 @@ function add_argument() {
 				local default_value
 				default_value=$(argparse_check "${arg[a]}" "${arg[d]}") || return 1
 				if [[ ${default_value} = "invalid" ]]; then
-					echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\" " >&2
-					echo "This is an error in the script"
+					echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"${ARG_TYPE[${arg[a]}]}\"" >&2
 					return 1
 				else
 					def_val=${default_value}
@@ -223,7 +222,7 @@ function parse_args() {
 				if [[ ${ARG_TYPE[${short}]} = "enum" ]]; then
 					printf 'valid values are: [%s]\n' "${_ARGPARSE_ENUMS[${short}]}"
 				else
-					printf 'it is not a valid "%s" \n' "${ARG_TYPE[${short}]}"
+					printf 'it is not a valid "%s"\n' "${ARG_TYPE[${short}]}"
 				fi
 			} >&2
 			return 1 # Fail when the parsed value was invalid
@@ -239,13 +238,13 @@ function parse_args() {
 	local invalid=0
 	for i in "${!MANDATORY[@]}"; do
 		if [[ -z ${ARGS[$i]} ]] && [[ ${MANDATORY[$i]} = true ]]; then
-			echo "Argument: -$i|--${MAP_LONG_ARGS[$i]}: ${HELP_ARGS[$i]}. is mandatory!!" >&2
+			echo "Argument -$i${MAP_LONG_ARGS[$i]:+|--${MAP_LONG_ARGS[$i]}} is mandatory: ${HELP_ARGS[$i]}" >&2
 			((invalid+=1))
 		fi
 	done
 
 	if (( invalid > 0 )) ; then
-		echo "Error: ${invalid} mandatory command line arguments missing" >&2
+		echo "Error: ${invalid} mandatory command line argument(s) missing" >&2
 		return 1
 	fi
 
