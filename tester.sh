@@ -101,6 +101,9 @@ B() { add_argument -a t -l tr -t bool -d true && add_argument -a n -l no -t bool
 # Sourcing argparse.sh does not change the caller's shell options.
 [[ $- != *e* ]] || exit 1
 
+# add_argument, parse_args and printargs do not leak their working variables.
+( S && parse_args -s y --str=z a && printargs >/dev/null && [[ ! -v o && ! -v opt && ! -v value && ! -v i && ! -v OPTARG ]] ) || exit 1
+
 # Errors return 1 to the caller instead of exiting.
 ( add_argument                        ; echo "rc=$?" ) 2>/dev/null | grep -qx rc=1 || exit 1
 ( add_argument -a s -d                ; echo "rc=$?" ) 2>/dev/null | grep -qx rc=1 || exit 1

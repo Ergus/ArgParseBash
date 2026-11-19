@@ -73,7 +73,7 @@ function add_argument() {
 		return 1
 	fi
 
-	local OPTIND # to save the index locally
+	local OPTIND o OPTARG # getopts state, kept local
 	declare -A arg=([h]="No documented option")
 	while getopts ":a:l:h:d:t:e:" o; do # Read the function arguments -a mandatory
 		case $o in
@@ -170,7 +170,7 @@ function parse_args() {
 
 	local OPTIND=1                         # local index
 	local short="" long=""
-	local rest=()
+	local rest=() o opt value i OPTARG     # getopts sets o and OPTARG
 
 	# getopts stops at "--" and at the first non-option: "--" ends parsing,
 	# a non-option goes to rest and parsing resumes after it.
@@ -264,7 +264,7 @@ function parse_args() {
 function printargs() {
 	# Prints the arguments (short and long) with its values and doc-string
 	# The first argument is set as a prefix for every line
-	local prefix=$1
+	local prefix=$1 i
 	for i in "${!ARGS[@]}"; do
 		local bo=" " bc=" "
 		local long=""
