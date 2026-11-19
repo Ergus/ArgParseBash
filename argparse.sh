@@ -169,18 +169,21 @@ function parse_args() {
 	local OPTIND=1                         # local index
 	local short="" long=""
 	local rest=() o opt value i OPTARG     # getopts sets o and OPTARG
+	local auto_help=h                      # automatic -h/--help unless the script defines either
+	[[ -v ARG_TYPE[h] || -v MAP_ARGS_LONG[help] ]] && auto_help=""
 
 	# getopts stops at "--" and at the first non-option: "--" ends parsing,
 	# a non-option goes to rest and parsing resumes after it.
 	while (( OPTIND <= $# )); do
 		[[ ${!OPTIND} = "--" ]] && { rest+=("${@:OPTIND+1}"); break; }
-		getopts ":${_argparse_opt_chars}-:" o || { rest+=("${!OPTIND}"); ((OPTIND+=1)); continue; }
+		getopts ":${_argparse_opt_chars}${auto_help}-:" o || { rest+=("${!OPTIND}"); ((OPTIND+=1)); continue; }
 
 		if [[ $o = "?" ]]; then
 			echo "Unknown option: -${OPTARG}" >&2
 			return 1
 		fi
 		[[ $o = ":" ]] && { echo "Option -${OPTARG} requires a value" >&2; return 1; }
+		[[ -n $auto_help && ( $o = h || $o$OPTARG = -help ) ]] && { printhelp; return 1; }  # 1: not parsed
 		value=""
 
 		if [[ $o = "-" ]]; then            # long options filtered by hand
@@ -257,6 +260,22 @@ function parse_args() {
 		HELP_ARGS["REST"]="REST of arguments"
 		MANDATORY["REST"]=false
 	fi
+}
+
+function printhelp() {
+	# Prints a usage line and one line per argument to stdout.
+	local i spec info def
+	printf 'Usage: %s [OPTIONS] [ARGS...]\n\nOptions:\n' "${0##*/}"
+	for i in "${!HELP_ARGS[@]}"; do
+		[[ $i = REST ]] && continue
+		spec="-$i${MAP_LONG_ARGS[$i]:+, --${MAP_LONG_ARGS[$i]}}"
+		[[ ${ARG_TYPE[$i]} != bool ]] && spec+=" ${ARG_TYPE[$i]^^}"
+		def=${DEFAULTS[$i]}; [[ ${ARG_TYPE[$i]} = list ]] && def=${def// /,}
+		[[ ${MANDATORY[$i]} = true ]] && info="mandatory" || info="default: ${def}"
+		[[ ${ARG_TYPE[$i]} = enum ]] && info="one of: ${_ARGPARSE_ENUMS[$i]}; ${info}"
+		printf '  %-24s %s (%s)\n' "${spec}" "${HELP_ARGS[$i]}" "${info}"
+	done
+	[[ -v ARG_TYPE[h] || -v MAP_ARGS_LONG[help] ]] || printf '  %-24s %s\n' "-h, --help" "Show this help"
 }
 
 function printargs() {

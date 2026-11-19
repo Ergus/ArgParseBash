@@ -9,7 +9,7 @@ and short names. For the usage, please, see the test examples scripts.
 [test_types.sh](test_types.sh)
 
 
-There are 3 public functions and 1 internal function. On error, `add_argument` and `parse_args` print
+There are 4 public functions and 1 internal function. On error, `add_argument` and `parse_args` print
 a message on stderr and return 1; they never exit. The caller decides
 how to handle the failure, for example:
 
@@ -59,6 +59,13 @@ parse_args "$@" || exit 1
     this is useful to add comments before the printed lines:
 
 	Example: `printargs "# "`
+
++ **printhelp**: prints a usage line and one line per argument to
+  stdout: names, type, help string, and the default value, the enum
+  values or "mandatory".
+
+	`parse_args` calls it for `-h` and `--help` unless the script defines
+	either, then returns 1, so `parse_args "$@" || exit 1` stops the script.
 
 + **argparse_check**: checks the values to match the parameter
   types. This is an internal function and the user shouldn't need to

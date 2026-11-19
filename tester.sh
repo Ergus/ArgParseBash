@@ -78,6 +78,8 @@ echo "================= Starting types =============================="
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 8 || exit 1
 
 ./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 8 rest of arguments || exit 1
+./test_types.sh --help && exit 1
+./test_types.sh --help | grep -q '^Usage: test_types.sh' || exit 1
 
 echo -e "\n================= Starting mandatory =======================\n"
 
@@ -127,6 +129,18 @@ B() { add_argument -a t -l tr -t bool -d true && add_argument -a n -l no -t bool
 ( add_argument -a n && parse_args )        2>&1 | grep -qx 'Argument -n is mandatory: No documented option' || exit 1
 ( M && parse_args )                        2>&1 | grep -qx 'Argument -m|--mand is mandatory: No documented option' || exit 1
 ( S && ARG_TYPE[s]= && parse_args -s y )   2>&1 | grep -q '^argparse_check: internal error' || exit 1
+
+# Automatic -h/--help prints the help on stdout and returns 1, unless the script defines either.
+( S && parse_args -h;     echo "rc=$?" ) 2>/dev/null | grep -qx rc=1 || exit 1
+( S && parse_args --help ) 2>/dev/null | grep -q '^Usage: ' || exit 1
+( S && parse_args -h ) | grep -q '^  -s, --str STRING  *No documented option (default: x)$' || exit 1
+( M && parse_args -h ) | grep -q '^  -m, --mand STRING  *No documented option (mandatory)$' || exit 1
+( E -e a,b -d a && parse_args -h ) | grep -q '^  -e ENUM  *No documented option (one of: a,b; default: a)$' || exit 1
+( B && parse_args -h ) | grep -q '^  -n, --no  *No documented option (default: false)$' || exit 1
+( S && parse_args -h ) | grep -q '^  -h, --help  *Show this help$' || exit 1
+( add_argument -a h -l help -t bool && parse_args -h --help && [[ ${ARGS[h]} = true ]] ) || exit 1
+( add_argument -a x -l help -t bool && parse_args --help && [[ ${ARGS[x]} = true ]] ) || exit 1
+( add_argument -a h -t bool && printhelp ) | grep -q 'Show this help' && exit 1
 
 # Errors return 1 to the caller instead of exiting.
 ( add_argument                        ; echo "rc=$?" ) 2>/dev/null | grep -qx rc=1 || exit 1
