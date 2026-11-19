@@ -33,6 +33,7 @@ declare -A HELP_ARGS       # associative array for argument/help_string
 declare -A MANDATORY       # list for mandatory arguments
 declare -A ARG_TYPE        # list for mandatory arguments
 declare -A ENUMS           # list of valid parameters for lists
+declare -A DEFAULTS        # default values; a bool flag sets the opposite of its default
 declare -a ARGS_REST=()    # remaining arguments, word boundaries preserved
 
 VALID_TYPES="string int float bool path file enum timer list"
@@ -142,6 +143,7 @@ function add_argument() {
 
 		# assign always a value (empty if not)
 		ARGS[${arg[a]}]=${def_val}              # add the vale in the array!!
+		DEFAULTS[${arg[a]}]=${def_val}
 
 		# the long option
 		if [[ -n ${arg[l]} ]]; then
@@ -207,8 +209,8 @@ function parse_args() {
 		fi
 
 		# type validation here if needed
-		if [[ ${ARG_TYPE[$short]} = "bool" ]]; then
-			[[ ${ARGS[$short]} = true ]] && value=false || value=true
+		if [[ ${ARG_TYPE[$short]} = "bool" && -z ${value} ]]; then  # no "=value" given
+			[[ ${DEFAULTS[$short]} = true ]] && value=false || value=true
 		fi
 
 		local parsed_value

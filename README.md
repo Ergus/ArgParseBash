@@ -106,20 +106,16 @@ public variables.
 
 + **ARG_TYPE**: Array that returns the argument type
 
++ **DEFAULTS**: Default values. Index *short*.
+
 + **ARGS_REST**: Indexed array with the remaining arguments. See below.
 
 This is a WIP and of course can be improved, if you use/improve it
 or you find any error/issue, please, contact me in order to improve,
 correct or add you as a collaborator in this project.
 
-The bool variables do not require a parameter, in fact it is ignored
-if provided and the variable is only switched between true and
-false. If you want to use a boolean variable that accepts `true` or
-`false` y recommend to use an enum instead like:
-
-```
-add_argument -a b -l mybool -h "Bool option with input" -t enum -e true,false -d false
-```
+A bool flag sets the opposite of its default; `--mybool=true|false`
+sets the value explicitly.
 
 An extra **REST** argument is automatically added when the input
 contains arguments that are not options. These may appear before,
