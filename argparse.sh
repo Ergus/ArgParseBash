@@ -93,7 +93,7 @@ function add_argument() {
 
 		# Set type (default string)
 		if [[ -n ${arg[t]} ]]; then
-			if [[ ${VALID_TYPES} =~ ${arg[t]} ]]; then
+			if [[ ${arg[t]} =~ ^(${VALID_TYPES// /|})$ ]]; then  # exact match only
 				ARG_TYPE[${arg[a]}]=${arg[t]}
 			else
 				echo "${arg[t]} is not a valid type" >&2
