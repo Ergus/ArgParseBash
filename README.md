@@ -106,6 +106,8 @@ public variables.
 
 + **ARG_TYPE**: Array that returns the argument type
 
++ **ARGS_REST**: Indexed array with the remaining arguments. See below.
+
 This is a WIP and of course can be improved, if you use/improve it
 or you find any error/issue, please, contact me in order to improve,
 correct or add you as a collaborator in this project.
@@ -134,6 +136,18 @@ done
 ```
 
 is also valid.
+
+`ARGS[REST]` joins the arguments with spaces, so an argument that
+contains spaces is split when iterated. To keep each argument intact,
+use the indexed array `ARGS_REST`:
+
+```
+for i in "${ARGS_REST[@]}"; do
+	echo "$i"
+done
+```
+
+`${#ARGS_REST[@]}` returns the number of remaining arguments.
 
 This is under GPLv3 license
 
