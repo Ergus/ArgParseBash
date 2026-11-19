@@ -54,7 +54,7 @@ function argparse_check () {
 		path) [[ -d $value ]] && found=$value ;;
 		file) [[ -f $value ]] && found=$value ;;
 		enum) [[ $value =~ (^${ENUMS[$1]//,/'$|^'}$) ]] && found=${BASH_REMATCH[1]} ;;
-		timer) [[ $value =~ (^[0-9]+:?[0-5][0-9]:[0-5][0-9]$) ]] && found=${BASH_REMATCH[1]} ;;
+		timer) [[ $value =~ (^([0-9]+:)?[0-5][0-9]:[0-5][0-9]$) ]] && found=${BASH_REMATCH[1]} ;;
 		list) [[ $value =~ ^(([0-9]+,)+?[0-9]+)$ ]] && found=${BASH_REMATCH[1]//,/ } ;;
 		*) found="invalid" ;;
 	esac
