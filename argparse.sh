@@ -23,19 +23,19 @@
 # Declare global variables, I would prefer some level of encapsulation here,
 # but there is not time now.
 
-nargs=0                    # number of total arguments (unused now)
-opt_chars=""               # chain to parse
+# Internal state uses the _argparse_ prefix to avoid clashes with caller variables.
+_argparse_opt_chars=""     # getopts option string
 declare -A ARGS            # associative array for argument/value
 declare -A MAP_LONG_ARGS   # associative array argument/long_argument
 declare -A MAP_ARGS_LONG   # associative array long_argument/argument
 declare -A HELP_ARGS       # associative array for argument/help_string
 declare -A MANDATORY       # list for mandatory arguments
 declare -A ARG_TYPE        # list for mandatory arguments
-declare -A ENUMS           # list of valid parameters for lists
+declare -A _ARGPARSE_ENUMS # valid values of each enum argument
 declare -A DEFAULTS        # default values; a bool flag sets the opposite of its default
 declare -a ARGS_REST=()    # remaining arguments, word boundaries preserved
 
-VALID_TYPES="string int float bool path file enum timer list"
+_ARGPARSE_VALID_TYPES="string int float bool path file enum timer list"
 
 # Arguments type tests
 # Receives the argument and the value
@@ -55,7 +55,7 @@ function argparse_check () {
 		path) [[ -d $value ]] && found=$value ;;
 		file) [[ -f $value ]] && found=$value ;;
 		# Literal match: quoted pattern parts disable glob/regex metacharacters in values.
-		enum) [[ $value != *,* && ",${ENUMS[$1]}," == *",${value},"* ]] && found=$value ;;
+		enum) [[ $value != *,* && ",${_ARGPARSE_ENUMS[$1]}," == *",${value},"* ]] && found=$value ;;
 		timer) [[ $value =~ (^([0-9]+:)?[0-5][0-9]:[0-5][0-9]$) ]] && found=${BASH_REMATCH[1]} ;;
 		list) [[ $value =~ ^(([0-9]+,)+?[0-9]+)$ ]] && found=${BASH_REMATCH[1]//,/ } ;;
 		*) found="invalid" ;;
@@ -97,14 +97,14 @@ function add_argument() {
 		[[ -z ${arg[l]} || ${arg[l]} =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ ]] || { echo "Error adding CL argument: invalid long name \"${arg[l]}\" (letters, digits, '_' or '-')" >&2; return 1; }
 		[[ -v ARG_TYPE[${arg[a]}] ]] && { echo "Error adding CL argument: -${arg[a]} already defined" >&2; return 1; }
 		[[ -n ${arg[l]} && -v MAP_ARGS_LONG[${arg[l]}] ]] && { echo "Error adding CL argument: --${arg[l]} already defined" >&2; return 1; }
-		opt_chars+=${arg[a]}        # append option to the format
+		_argparse_opt_chars+=${arg[a]}        # append option to the format
 		local def_val=""            # "" means unset; mandatory check relies on it
 		ARG_TYPE[${arg[a]}]=string  # Argument type, default string for all=
 		MANDATORY[${arg[a]}]=true   # Arguments mandatory by default
 
 		# Set type (default string)
 		if [[ -n ${arg[t]} ]]; then
-			if [[ ${arg[t]} =~ ^(${VALID_TYPES// /|})$ ]]; then  # exact match only
+			if [[ ${arg[t]} =~ ^(${_ARGPARSE_VALID_TYPES// /|})$ ]]; then  # exact match only
 				ARG_TYPE[${arg[a]}]=${arg[t]}
 			else
 				echo "${arg[t]} is not a valid type" >&2
@@ -119,17 +119,17 @@ function add_argument() {
 			[[ ${def_val} != "invalid" ]] || { echo "Default value \"${arg[d]}\" for \"${arg[a]}\" is not \"bool\"" >&2; return 1; }
 			MANDATORY[${arg[a]}]=false
 		else
-			# Sets ENUMS[short] before testing. Needed!!
+			# Sets _ARGPARSE_ENUMS[short] before testing. Needed!!
 			if [[ ${ARG_TYPE[${arg[a]}]} = "enum" ]]; then
 				if [[ -n ${arg[e]} ]] ; then
-					ENUMS[${arg[a]}]=${arg[e]}
+					_ARGPARSE_ENUMS[${arg[a]}]=${arg[e]}
 				else
 					echo "Enum requires -e option" >&2
 					return 1
 				fi
 			fi
 			# if default value provided use it else it is mandatory
-			opt_chars+=":"
+			_argparse_opt_chars+=":"
 			if [[ -n ${arg[d]} ]]; then
 				local default_value
 				default_value=$(argparse_check "${arg[a]}" "${arg[d]}") || return 1
@@ -160,8 +160,6 @@ function add_argument() {
 		echo "Error adding CL argument, no short name given" >&2
 		return 1
 	fi
-
-	((nargs+=1))  # Counter (unused now)
 }
 
 function parse_args() {
@@ -176,7 +174,7 @@ function parse_args() {
 	# a non-option goes to rest and parsing resumes after it.
 	while (( OPTIND <= $# )); do
 		[[ ${!OPTIND} = "--" ]] && { rest+=("${@:OPTIND+1}"); break; }
-		getopts ":${opt_chars}-:" o || { rest+=("${!OPTIND}"); ((OPTIND+=1)); continue; }
+		getopts ":${_argparse_opt_chars}-:" o || { rest+=("${!OPTIND}"); ((OPTIND+=1)); continue; }
 
 		if [[ $o = "?" ]]; then
 			echo "Unknown option: -${OPTARG}" >&2
@@ -207,7 +205,7 @@ function parse_args() {
 			fi
 		else                               # short options (already filtered)
 			short=$o                       # set them
-			[[ ${opt_chars} =~ ${short}":" ]] && value=$OPTARG
+			[[ ${_argparse_opt_chars} =~ ${short}":" ]] && value=$OPTARG
 
 			long=${MAP_LONG_ARGS[$o]}      # search if exists corresponding long
 		fi
@@ -223,7 +221,7 @@ function parse_args() {
 			{
 				echo -n "Invalid value \"${value}\" for option \"-${short}\": "
 				if [[ ${ARG_TYPE[${short}]} = "enum" ]]; then
-					echo -e "valid values are: [${ENUMS[${short}]}]"
+					echo -e "valid values are: [${_ARGPARSE_ENUMS[${short}]}]"
 				else
 					echo -e "it is not a valid \"${ARG_TYPE[${short}]}\" "
 				fi
