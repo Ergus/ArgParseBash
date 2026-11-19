@@ -89,6 +89,15 @@ echo -e "\n================= Starting mandatory =======================\n"
 ./test_mandatory.sh -m value -d value  || exit 1
 
 
+echo -e "\n================= Starting parser ==========================\n"
+
+./test_parser.sh                 && exit 1
+./test_parser.sh -o x            || exit 1
+./test_parser.sh -h -l 3 -o -p 1 --help || exit 1
+./test_parser.sh -o x --print    && exit 1
+./test_parser.sh -o x --unknown  && exit 1
+./test_parser.sh --other=x --loops 3 | grep -q '^Number of loops: 3$' || exit 1
+
 echo -e "\n================= Starting corner cases ====================\n"
 
 # "| grep -q MSG || exit 1" -> Intended to print MSG (error cases where the message matters)
