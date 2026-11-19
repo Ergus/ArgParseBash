@@ -174,9 +174,14 @@ function parse_args() {
 			if [[ -n ${opt} && -v MAP_ARGS_LONG[$opt] ]]; then  # exact match only
 				short=${MAP_ARGS_LONG[$opt]}    # corresponding short opt
 				long=${opt}
+				# "--opt value": consume the next word, as getopts does for "-o value".
 				if [[ ${OPTARG} != *=* && ${ARG_TYPE[$short]} != "bool" ]]; then
-					echo "Option --$opt requires a value: --$opt=VALUE" >&2
-					exit 1
+					if (( OPTIND > $# )); then
+						echo "Option --$opt requires a value" >&2
+						exit 1
+					fi
+					value=${!OPTIND}
+					((OPTIND+=1))
 				fi
 			else                           # if no long option exist with this name
 				echo "Unknown option: --$opt" >&2
