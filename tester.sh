@@ -38,39 +38,43 @@ EOF
 
 echo "================= Starting types =============================="
 
-./test_types.sh -p /tmpp
-./test_types.sh -p /tmp
+#  && exit 1 -> Intended to fail
+#  || exit 1 -> Intended to success
 
-./test_types.sh -p /tmp -a /etc/caca
-./test_types.sh -p /tmp -a /etc/bash.bashrc
+./test_types.sh -p /tmpp && exit 1
+./test_types.sh -p /tmp || exit 1
 
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3.14
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3
+./test_types.sh -p /tmp -a /etc/caca && exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc || exit 1
 
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f abc
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 5
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 2.7171
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3.14 && exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 || exit 1
 
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -e option3
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -e option2
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f abc    && exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 5      || exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 2.7171 || exit 1
 
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 2.7171 -n -t
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -e option3 && exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -e option2 || exit 1
 
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 00:70:00
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 12:34:56
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 2.7171 -n || exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -f 2.7171 -n -t || exit 1
 
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 6,7,89,0
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 8
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 00:70:00 && exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -w 12:34:56 || exit 1
 
-./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 8 rest of arguments
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 6,7,89,0 || exit 1
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 8 || exit 1
+
+./test_types.sh -p /tmp -a /etc/bash.bashrc -i 3 -l 8 rest of arguments || exit 1
 
 echo -e "\n================= Starting mandatory =======================\n"
 read -p "Press [Enter] key to continue..."
 
-./test_mandatory.sh -b
-./test_mandatory.sh -d value
+./test_mandatory.sh -b  || exit 1
+./test_mandatory.sh -d value  || exit 1
 
-./test_mandatory.sh -m value
-./test_mandatory.sh -b -m value
-./test_mandatory.sh -m value -d value
+./test_mandatory.sh -m value  || exit 1
+./test_mandatory.sh -b -m value  || exit 1
+./test_mandatory.sh -m value -d value  || exit 1
 
